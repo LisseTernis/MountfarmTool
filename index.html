@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- vim: tw= ts=2 sw=2 sts=2 -->
+<!-- vim: set tw=0 ts=2 sw=2 sts=2: -->
 <html>
   <head>
     <title>Mount Farm Worksheet</title>
@@ -405,14 +405,14 @@
       }
 
       function overrideMount(event) {
-        console.log(event); // DEBUG
+        //console.log(event); // DEBUG
         var mount_name =
-          event.target.parentElement.firstElementChild.textContent;
+          event.target.parentElement.firstElementChild.childNodes[0].nodeValue;
         var index = whichChild(event.target);
         var character_name = mounts_table_header.children[index].textContent;
         var id = fc_members[character_name];
-        console.log(`overriding mount ${mount_name} for ${character_name} with`+
-          `ID ${id}`); // DEBUG
+        //console.log(`overriding mount ${mount_name} for ${character_name} with`+
+        //  ` ID ${id}`); // DEBUG
         if (event.target.classList.contains("no")) {
           /* Determine mount name and character ID. */
           overrides[mount_name].push(id);
@@ -454,6 +454,7 @@
       function reset_complete(x) { return false; }
 
       function set_hide_complete (event) {
+        if (!tomselect.getValue().length) { return; }
         var comp_func;
         switch (hide_complete.value) {
           case "0":
