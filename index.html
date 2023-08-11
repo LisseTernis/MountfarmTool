@@ -795,7 +795,7 @@
           select_server.appendChild(option);
         }
         if (datacenter != select_datacenter.selectedIndex) {
-          localStorage.removeItem("server");
+          //localStorage.removeItem("server");
           select_server.selectedIndex = -1;
           input_fcname.value = "";
           input_excluded_ranks.value = "";
@@ -818,8 +818,8 @@
         // Store settings in local storage.
         // NOTE: datacenter is a number, server is a number, fcname a string,
         // fcid a number, excludedranks a string.
-        if (datacenter) localStorage.setItem("datacenter", datacenter);
-        if (server) localStorage.setItem("server", server);
+        if (datacenter > -1) localStorage.setItem("datacenter", datacenter);
+        if (server > -1) localStorage.setItem("server", server);
         if (fc_name) localStorage.setItem("fcname", fc_name);
         if (excluded_ranks) localStorage.setItem("excludedranks", excluded_ranks);
         if (fc_id) localStorage.setItem("fcid", fc_id);
