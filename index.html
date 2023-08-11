@@ -543,8 +543,12 @@
           loadMounts(value);
         },
         onItemRemove: function(value){
-          sessionStorage.setItem(
-            "character_selection", JSON.stringify(this.getValue()));
+          if (this.getValue().length) {
+            sessionStorage.setItem(
+              "character_selection", JSON.stringify(this.getValue()));
+          } else {
+            sessionStorage.removeItem("character_selection");
+          }
           removeCharacter(value);
         },
       });
@@ -565,8 +569,8 @@
         var th = document.createElement("th");
         tr.appendChild(th);
         th.innerHTML = mount_name + "<div>" + mounts[mount_name].quest +
-          ((mounts[mount_name].boss) ? ("<br/><em>" + mounts[mount_name].boss + "</em>") : "")
-          + "</div>";
+          ((mounts[mount_name].boss) ? ("<br/><em>" + mounts[mount_name].boss +
+            "</em>") : "") + "</div>";
         mounts[mount_name].tr = tr;
         if (!overrides.hasOwnProperty(mount_name)) {
           overrides[mount_name] = [];
