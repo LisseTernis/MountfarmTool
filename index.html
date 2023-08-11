@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <!-- vim: set tw=0 ts=2 sw=2 sts=2: -->
 <html>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <head>
     <title>Mount Farm Tool</title>
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
@@ -17,6 +18,8 @@
     .ts-control,
     .ts-control input,
     .ts-dropdown,
+    input,
+    button,
     select {
       font-size: 1rem;
     }
@@ -95,6 +98,7 @@
     tr.EW:nth-child(even)  { background-color: rgb(240 166  96); }
 
     #status_elements {
+      /*display: none;*/
       position: fixed;
       height: 50vh;
       width: 50vw;
@@ -215,9 +219,117 @@
       cursor: pointer;
       text-weight: bold;
     }
+
+    #settings_ui {
+      position: fixed;
+      height: 100vh;
+      width: 100vw;
+      left: 0;
+      top: 0;
+      margin: 0;
+      padding: 5vmin;
+      display: none; /* NOTE: use table when showing. */
+      z-index: 10;
+      background-color: rgba(243, 241, 236, 0.5);
+    }
+
+    #settings_dialog {
+      text-align: center;
+      vertical-align: middle;
+      display: table-cell;
+      padding: 10vmin;
+    }
+
+    #select_datacenter,
+    #select_server {
+      margin-right: 2em;
+      min-width: 5em;
+    }
+
+    .ts-wrapper {
+      display: inline-block;
+      width: 95%;
+    }
+
+    #button_settings {
+      height: 2.25em;
+      width: 4.5%;
+    }
+
+    div.settings {
+      margin-top: 1em;
+    }
+
+    table.settings {
+      width: 100%
+    }
+
+    table.settings tbody tr td {
+      /*vertical-align: middle;*/
+      /*padding-right: 0.5em;*/
+      border-right: none;
+      font-size: 100%;
+      text-align: left;
+    }
+
+    table.settings tbody tr td:first-child {
+      text-align: right;
+      width: 50%;
+    }
+
+    table.settings tbody tr td[colspan="2"] {
+      text-align: center;
+    }
     </style>
   </head>
   <body>
+    <div id="settings_ui">
+      <div id="settings_dialog">
+        <h1>Settings</h1>
+        <table class="settings">
+          <tbody>
+            <tr>
+              <td>DataCenter:</td>
+              <td>
+                <select id="select_datacenter"></select>
+              </td>
+            </tr>
+            <tr>
+              <td>Server:</td>
+              <td>
+                <select id="select_server"></select>
+              </td>
+            </tr>
+            <tr>
+              <td>Free Company Name:</td>
+              <td>
+                <input id="input_fcname"
+                       placeholder="Enter Free Company Name here"></input>
+              </td>
+            </tr>
+            <tr>
+              <td>Excluded Ranks:</td>
+              <td>
+                <input
+                    id="input_excluded_ranks"
+                    placeholder="Comma-speparated list of ranks"></input>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <button id="button_copy_link">🔗 Copy Link to Clipboard</button>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <button id="button_apply">Apply</button>
+                <button id="button_cancel">Cancel</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
     <div id="status_elements">
       <svg id="spinner" class="spinner" viewBox="0 0 50 50">
         <circle class="path" cx="25" cy="25" r="20" fill="#f3f1ec"
@@ -234,17 +346,27 @@
               autocomplete="off"
               >
       </select>
+      <button id="button_settings">⚙️</button>
     </div>
     <table id="mounts_table">
       <thead>
         <tr id="mounts_table_header">
           <th id="first_th">
-            hide:
             <select id="hide_complete">
-              <option value=0>none</option>
-              <option value=1>Lodestone obtained</option>
-              <option value=2>all obtained</option>
+              <option value=0>show all mounts</option>
+              <option value=1>hide Lodestone obtained</option>
+              <option value=2>hide all obtained</option>
             </select>
+
+            <select id="select_expansion">
+              <option value="All">All</option>
+              <option value="ARR">ARR</option>
+              <option value="HW">HW</option>
+              <option value="SB">SB</option>
+              <option value="ShB">ShB</option>
+              <option value="EW">EW</option>
+            </select>
+
           </th>
         </tr>
       </thead>
@@ -256,6 +378,44 @@
       const yesText = "✓";
       const noText = "✗";
       const overriddenText = "🥳";
+
+      var tr_ARR, tr_HW, tr_SB, tr_ShB, tr_EW;
+      for (var rule of document.styleSheets[1].cssRules) {
+        switch (rule.selectorText) {
+          case "tr.ARR":
+            tr_ARR = rule.style;
+            break;
+          case "tr.HW":
+            tr_HW = rule.style;
+            break;
+          case "tr.SB":
+            tr_SB = rule.style;
+            break;
+          case "tr.ShB":
+            tr_ShB = rule.style;
+            break;
+          case "tr.EW":
+            tr_EW = rule.style;
+            break;
+        }
+      }
+
+      const settings_ui = document.getElementById("settings_ui");
+      const select_datacenter = document.getElementById("select_datacenter");
+      const select_server = document.getElementById("select_server");
+      const input_fcname = document.getElementById("input_fcname");
+      const input_excluded_ranks =
+        document.getElementById("input_excluded_ranks");
+      const button_apply = document.getElementById("button_apply");
+      const button_cancel = document.getElementById("button_cancel");
+      const button_settings = document.getElementById("button_settings");
+      const button_copy_link = document.getElementById("button_copy_link");
+
+      var datacenter;
+      var server;
+      var fc_name;
+      var excluded_ranks;
+
       const status_elements = document.getElementById("status_elements");
       const status_text = document.getElementById("status_text");
       const spinner = document.getElementById("spinner");
@@ -266,7 +426,9 @@
       const mounts_table_body = document.getElementById("mounts_table_body");
       const first_th = document.getElementById("first_th");
       const hide_complete = document.getElementById("hide_complete");
+      const select_expansion = document.getElementById("select_expansion");
       var fc_id = 0;
+      var url = new URL(document.URL);
       var fc_members = {};
       var mounts = {
         "Aithon"                  : { ID:  28, expansion: "ARR", quest: "The Bowl of Embers (Extreme)", boss:"Ifrit", owners: [], },
@@ -312,8 +474,6 @@
         "Lynx Of Righteous Fire"  : { ID: 315, expansion: "EW",  quest: "Mount Ordeals (Extreme)", boss: "Rubicante", owners: [], },
         "Lynx Of Fallen Shadow"   : { ID: 325, expansion: "EW",  quest: "The Voidcast Dais (Extreme)", boss: "Golbez", owners: [], },
       };
-
-      var excluded_ranks = ["Silent Warriors", "Coffee Interns"];
 
       function loadFCMembers() {
         updateStatus("Loading FC Members ...");
@@ -393,17 +553,22 @@
         );
       }
 
-      function updateStatus(text) {
+      function updateStatus(text="") {
         if (text) {
           status_text.textContent = text;
           status_elements.style.display = "";
           tomselect.disable();
           hide_complete.disabled = true;
+          select_expansion.disabled = true;
+          button_settings.disabled = true;
         } else {
           status_elements.style.display = "none";
           tomselect.enable();
           hide_complete.disabled = false;
+          select_expansion.disabled = false;
+          button_settings.disabled = false;
           set_hide_complete();
+          set_hide_expansions();
         }
       }
 
@@ -472,7 +637,6 @@
           }
           ++i;
         }
-        //mounts_table_header.removeChild(mounts_table_header.childNodes[i]);
         mounts_table_header.children[i].remove();
         for (var tr of mounts_table_body.children) {
           tr.children[i].remove();
@@ -505,33 +669,215 @@
             tr.style.display = "";
           }
         }
-        sessionStorage.setItem("hide_complete", hide_complete.value);
+        sessionStorage.setItem("hide_complete", hide_complete.selectedIndex);
+      }
+
+      function set_hide_expansions (event) {
+        var tr_ARR_display = "none";
+        var tr_HW_display = "none";
+        var tr_SB_display = "none";
+        var tr_ShB_display = "none";
+        var tr_EW_display = "none";
+        switch (select_expansion.value) {
+          case "ARR":
+            tr_ARR_display = "";
+            break;
+          case "HW":
+            tr_HW_display = "";
+            break;
+          case "SB":
+            tr_SB_display = "";
+            break;
+          case "ShB":
+            tr_ShB_display = "";
+            break;
+          case "EW":
+            tr_EW_display = "";
+            break;
+          default: /* All */
+            tr_ARR_display = "";
+            tr_HW_display = "";
+            tr_SB_display = "";
+            tr_ShB_display = "";
+            tr_EW_display = "";
+        }
+        tr_ARR.setProperty("display", tr_ARR_display);
+        tr_HW.setProperty("display", tr_HW_display);
+        tr_SB.setProperty("display", tr_SB_display);
+        tr_ShB.setProperty("display", tr_ShB_display);
+        tr_EW.setProperty("display", tr_EW_display);
+        sessionStorage.setItem("hide_expansions", select_expansion.selectedIndex);
+      }
+
+      var server_data = {};
+
+      function updateApplyButton() {
+        if (select_datacenter.selectedIndex < 0
+          || select_server.selectedIndex < 0
+          || !input_fcname.value.trim().length
+        ) {
+          button_apply.disabled = true;
+          button_copy_link.disabled = true;
+        } else {
+          button_apply.disabled = false;
+          button_copy_link.disabled = false;
+        }
+      }
+
+      function loadServerData() {
+        // To get server list: https://xivapi.com/servers/dc
+        updateStatus("Loading Servers ...");
+        window.fetch(xivapi + "/servers/dc").then(
+            (response) => response.json().then(
+              (data) => {
+                server_data = data;
+                updateStatus();
+                showSettings();
+              }
+            ),
+            (error) => {
+              updateStatus("Error retrieving data :(");
+            }
+          );
+      }
+
+      /* Source: https://developer.mozilla.org/en-US/docs/Web/API/Node */
+      function removeAllChildren(element) {
+        while (element.firstChild) {
+          element.removeChild(element.firstChild);
+        }
+      }
+
+      function loadSettings() {
+        datacenter = url.searchParams.get("datacenter") ||
+          localStorage.getItem("datacenter");
+        server = url.searchParams.get("server") ||
+          localStorage.getItem("server");
+        fc_name = url.searchParams.get("fcname") ||
+          localStorage.getItem("fcname");
+        fc_id = url.searchParams.get("fcid") ||
+          localStorage.getItem("fcid");
+        excluded_ranks = url.searchParams.get("excludedranks") ||
+          localStorage.getItem("excludedranks");
+        // Make sure the settings are stored.
+        storeSettings();
+      }
+
+      function showSettings() {
+        var option;
+        loadSettings();
+        removeAllChildren(select_datacenter);
+        for (var dc of Object.keys(server_data)) {
+          option = document.createElement("option");
+          option.textContent = option.value = dc;
+          select_datacenter.appendChild(option);
+        }
+        if (datacenter) {
+          select_datacenter.selectedIndex = datacenter;
+          datacenterSet();
+        } else {
+          select_datacenter.selectedIndex = -1;
+          select_server.disabled = true;
+        }
+
+        settings_ui.style.display = "table";
+        updateApplyButton();
+      }
+
+      function datacenterSet() {
+        var option;
+        removeAllChildren(select_server);
+        for (var [key, value] of Object.entries(
+          server_data[select_datacenter.value])) {
+          option = document.createElement("option");
+          option.value = key;
+          option.textContent = value;
+          select_server.appendChild(option);
+        }
+        if (datacenter != select_datacenter.selectedIndex) {
+          localStorage.removeItem("server");
+          select_server.selectedIndex = -1;
+          input_fcname.value = "";
+          input_excluded_ranks.value = "";
+        } else {
+          if (server) {
+            select_server.selectedIndex = server;
+            input_fcname.value = fc_name;
+            input_excluded_ranks.value = excluded_ranks;
+          } else {
+            select_server.selectedIndex = -1;
+            input_fcname.value = "";
+            input_excluded_ranks.value = "";
+          }
+        }
+        select_server.disabled = false;
+        updateApplyButton();
+      }
+
+      function storeSettings() {
+        // Store settings in local storage.
+        // NOTE: datacenter is a number, server is a number, fcname a string,
+        // fcid a number, excludedranks a string.
+        if (datacenter) localStorage.setItem("datacenter", datacenter);
+        if (server) localStorage.setItem("server", server);
+        if (fc_name) localStorage.setItem("fcname", fc_name);
+        if (excluded_ranks) localStorage.setItem("excludedranks", excluded_ranks);
+        if (fc_id) localStorage.setItem("fcid", fc_id);
+      }
+
+      function applySettings() {
+        datacenter = select_datacenter.selectedIndex;
+        server = select_server.selectedIndex;
+        fc_name = input_fcname.value;
+        excluded_ranks = (input_excluded_ranks.value) ?
+          input_excluded_ranks.value.split(",") : [];
+        var sname = server_data[select_datacenter.value][select_server.value];
+        settings_ui.style.display = "none";
+        updateStatus("Loading FC ID ...");
+        window.fetch(xivapi + "/freecompany/search?" + 
+          `Name=${fc_name}&Server=${sname}&columns=Name,ID`).then(
+            (response) => response.json().then(
+              (data) => {
+                for (r of data.Results) {
+                  if (r.Name == fc_name) {
+                    fc_id = r.ID;
+                    storeSettings();
+                    loadFCMembers();
+                    break;
+                  }
+                }
+              }
+            ),
+            (error) => {
+              updateStatus("Error determining ID :(");
+            }
+          );
       }
 
       /* === MAIN =========================================================== */
 
-      /* NOTE: I'm hard-coding the ID in the hope this won't change, to make 
-       * this a little faster.
-       *
-      updateStatus("Loading FC ID ...");
-      window.fetch(xivapi + "/freecompany/search?" + 
-        "Name=Mistwalkers&Server=Bismarck&columns=Name,ID").then(
-          (response) => response.json().then(
-            (data) => {
-              for (r of data.Results) {
-                if (r.Name == "Mistwalkers") {
-                  fc_id = r.ID;
-                  loadFCMembers();
-                  break;
-                }
-              }
-            }
-          ),
-          (error) => {
-            updateStatus("Error determining ID :(");
-          }
-        );
-      */
+      /* TODO:
+       * - Add a dropdown menu to selectively hide/show rows based on expansion.
+       */
+
+      select_datacenter.addEventListener("change", datacenterSet);
+      select_server.addEventListener("change", updateApplyButton);
+      input_fcname.addEventListener("change", updateApplyButton);
+      button_settings.addEventListener("click", loadServerData);
+      button_cancel.addEventListener("click", () => {
+        settings_ui.style.display = "none";
+      });
+      button_apply.addEventListener("click", applySettings);
+      button_copy_link.addEventListener("click", function () {
+        var url2 = new URL(url);
+        url2.search = ""; // Clear any values, if present.
+        url2.searchParams.set("fcid", fc_id);
+        url2.searchParams.set("datacenter", datacenter);
+        url2.searchParams.set("server", server);
+        url2.searchParams.set("fcname", fc_name);
+        url2.searchParams.set("excludedranks", excluded_ranks);
+        navigator.clipboard.writeText(url2.href);
+      });
 
       var tomselect = new TomSelect("#searchselect", {
         plugins: ["remove_button"],
@@ -554,9 +900,14 @@
       });
       tomselect.disable();
       hide_complete.disabled = true;
+      select_expansion.disabled = true;
 
       hide_complete.addEventListener("change", set_hide_complete);
-      hide_complete.value = sessionStorage.getItem("hide_complete") || 0;
+      hide_complete.selectedIndex = sessionStorage.getItem("hide_complete") || 0;
+
+      select_expansion.addEventListener("change", set_hide_expansions);
+      select_expansion.selectedIndex =
+        sessionStorage.getItem("hide_expansions") || 0;
 
       /* Local overrides. */
       var overrides = JSON.parse(sessionStorage.getItem("overrides")) || {};
@@ -576,8 +927,14 @@
           overrides[mount_name] = [];
         }
       }
-      fc_id = "9226468261598593545";
-      loadFCMembers();
+
+      loadSettings();
+      if (fc_id) {
+        loadFCMembers();
+      } else {
+        /* No id set, so show settings to start with. */
+        loadServerData();
+      }
 
     </script>
   </body>
