@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<!-- vim: tw= ts=2 sw=2 sts=2 -->
+<html>
+  <head>
+    <title>Mount Farm Worksheet</title>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <style>
+
+    body {
+      font-family: Avenir Next, sans-serif;
+      font-size: 10pt;
+      color: #302d2d;
+      background-color: #f3f1ec;
+    }
+
+    table {
+      border-collapse: collapse;
+      font-style: normal;
+      font-weight: normal;
+      margin: 0;
+      padding: 0;
+      caption-side: top;
+    }
+
+    strong {
+      font-weight: 600;
+    }
+
+    th {
+      font-weight: 600;
+      vertical-align: bottom;
+      padding-right: 0.5em;
+      text-align: left;
+      border-right: 0.5pt solid #302d2d;
+    }
+
+    th div {
+      font-weight: normal;
+    }
+
+    th:last-child {
+      border-right: none;
+    }
+
+    th:first-child {
+      border-right: none;
+    }
+
+    td {
+      vertical-align: middle;
+      padding-right: 0.5em;
+      border-right: 0.5pt solid #302d2d;
+      font-size: 200%;
+    }
+
+    td:last-child {
+      padding-right: 0;
+      border-right: none;
+    }
+
+    tr.ARR                 { background-color: rgb(170 241 255); }
+    tr.ARR:nth-child(even) { background-color: rgb(157 222 230); }
+
+    tr.HW                  { background-color: rgb( 52 188 213); }
+    tr.HW:nth-child(even)  { background-color: rgb( 57 173 209); }
+
+    tr.SB                  { background-color: rgb(246 198  72); }
+    tr.SB:nth-child(even)  { background-color: rgb(222 159  54); }
+
+    tr.ShB                 { background-color: rgb(124 170 225); }
+    tr.ShB:nth-child(even) { background-color: rgb(112 134 194); }
+
+    tr.EW                  { background-color: rgb(216 165 110); }
+    tr.EW:nth-child(even)  { background-color: rgb(240 166  96); }
+
+    #status_elements {
+      position: fixed;
+      height: 50vh;
+      width: 50vw;
+      left: 25vw;
+      top: 25vh;
+      margin: 0;
+      display: table;
+    }
+
+    #status_text {
+      text-align: center;
+      vertical-align: middle;
+      display: table-cell;
+      padding-left: 20vw;
+      padding-right: 20vw;
+    }
+
+    .spinner {
+      animation: rotate 2s linear infinite;
+      z-index: 2;
+      position: fixed;
+      height: 50vh;
+      width: 50vw;
+      left: 25vw;
+      top: 25vh;
+      margin: 0;
+    }
+
+    .spinner .path {
+      stroke: #302d2d;
+      stroke-linecap: round;
+      animation: dash 1.5s ease-in-out infinite;
+    }
+
+    @keyframes rotate {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes dash {
+      0% {
+        stroke-dasharray: 1, 150;
+        stroke-dashoffset: 0;
+      }
+      50% {
+        stroke-dasharray: 90, 150;
+        stroke-dashoffset: -35;
+      }
+      100% {
+        stroke-dasharray: 90, 150;
+        stroke-dashoffset: -124;
+      }
+    }
+
+    thead tr {
+      position: sticky;
+      top: 0;
+    }
+
+    thead tr th {
+      text-align: center;
+      background-color: #f3f1ec;
+      background-clip: padding-box;
+      padding-left: 0.5em;
+    }
+
+    tbody tr th {
+      text-align: right;
+    }
+
+    .yes {
+      color: darkblue;
+      text-align: center;
+    }
+
+    .no {
+      color: red;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .overridden {
+      color: yellowgreen;
+      text-align: center;
+      cursor: pointer;
+      text-weight: bold;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="status_elements">
+      <div id="status_text">Loading ...</div>
+      <svg id="spinner" class="spinner" viewBox="0 0 50 50">
+        <circle class="path" cx="25" cy="25" r="20" fill="none"
+                stroke-width="5"></circle>
+      </svg>
+    </div>
+    <div>
+      <!--
+      <input id="searchfield"
+             list="fc_names"
+             placeholder="Enter name to add"
+             disabled >
+      <datalist id="fc_names">
+      </datalist>
+      -->
+      <select multiple
+              id="searchselect"
+              placeholder="Enter a name to add..."
+              autocomplete="off"
+              >
+      </select>
+    </div>
+    <table id="mounts_table">
+      <thead>
+        <tr id="mounts_table_header">
+          <th id="first_th">
+            <!--
+            <input type="checkbox" id="hide_complete"/>
+            <label for="hide_complete">hide complete</label>
+            -->
+            hide:
+            <select id="hide_complete">
+              <option value=0>none</option>
+              <option value=1>Lodestone obtained</option>
+              <option value=2>all obtained</option>
+            </select>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="mounts_table_body">
+      </tbody>
+    </table>
+    <script>
+      const xivapi = "https://xivapi.com";
+      const yesText = "✓";
+      const noText = "✗";
+      const overriddenText = "🥳";
+      const status_elements = document.getElementById("status_elements");
+      const status_text = document.getElementById("status_text");
+      const spinner = document.getElementById("spinner");
+      //const searchfield = document.getElementById("searchfield");
+      //const fc_names = document.getElementById("fc_names");
+      const searchselect = document.getElementById("searchselect");
+      const mounts_table = document.getElementById("mounts_table");
+      const mounts_table_header =
+        document.getElementById("mounts_table_header");
+      const mounts_table_body = document.getElementById("mounts_table_body");
+      const first_th = document.getElementById("first_th");
+      const hide_complete = document.getElementById("hide_complete");
+      var fc_id = 0;
+      var fc_members = {};
+      // TODO: Add trial and boss names.
+      var mounts = {
+        "Aithon"                  : { ID:  28, expansion: "ARR", quest: "The Bowl of Embers (Extreme)", boss:"Ifrit", owners: [], },
+        "Gullfaxi"                : { ID:  30, expansion: "ARR", quest: "The Navel (Extreme)", boss: "Titan", owners: [], },
+        "Xanthos"                 : { ID:  29, expansion: "ARR", quest: "The Howling Eye (Extreme)", boss: "Garuda", owners: [], },
+        "Enbarr"                  : { ID:  31, expansion: "ARR", quest: "The Whorleater (Extreme)", boss: "Leviathan", owners: [], },
+        "Markab"                  : { ID:  40, expansion: "ARR", quest: "The Striking Tree (Extreme)", boss: "Ramuh", owners: [], },
+        "Boreas"                  : { ID:  43, expansion: "ARR", quest: "The Akh Afah Amphitheatre (Extreme)", boss: "Shiva", owners: [], },
+        "Nightmare"               : { ID:  22, expansion: "ARR", quest: "The Howling Eye (Extreme)<br/>The Navel (Extreme)<br/>The Bowl of Embers (Extreme)", boss: "Garuda, Titan, Ifrit", owners: [], },
+        "Kirin"                   : { ID:  47, expansion: "ARR", quest: "A Legend for a Legend", boss: null, owners: [], },
+
+        "Rose Lanner"             : { ID:  76, expansion: "HW",  quest: "Thok ast Thok (Extreme)", boss: "Ravana", owners: [], },
+        "White Lanner"            : { ID:  75, expansion: "HW",  quest: "The Limitless Blue (Extreme)", boss: "Bismarck", owners: [], },
+        "Round Lanner"            : { ID:  77, expansion: "HW",  quest: "The Minstrel's Ballad: Thordan's Reign", boss: "Thordan", owners: [], },
+        "Dark Lanner"             : { ID:  90, expansion: "HW",  quest: "The Minstrel's Ballad: Nidhogg's Rage", boss: "Nidhogg", owners: [], },
+        "Warring Lanner"          : { ID:  78, expansion: "HW",  quest: "Containment Bay S1T7 (Extreme)", boss: "Sephirot", owners: [], },
+        "Sophic Lanner"           : { ID:  98, expansion: "HW",  quest: "Containment Bay P1T6 (Extreme)", boss: "Sophia", owners: [], },
+        "Demonic Lanner"          : { ID: 104, expansion: "HW",  quest: "Containment Bay Z1T9 (Extreme)", boss: "Zurvan", owners: [], },
+        "Firebird"                : { ID: 105, expansion: "HW",  quest: "Fiery Wings, Fiery Hearts", boss: null, owners: [], },
+
+        "Reveling Kamuy"          : { ID: 116, expansion: "SB",  quest: "The Pool of Tribute (Extreme)", boss: "Susano", owners: [], },
+        "Blissful Kamuy"          : { ID: 115, expansion: "SB",  quest: "Emanation (Extreme)", boss: "Lakshmi", owners: [], },
+        "Legendary Kamuy"         : { ID: 133, expansion: "SB",  quest: "The Minstrel's Ballad: Shinryu's Domain", boss: "Shinryu", owners: [], },
+        "Lunar Kamuy"             : { ID: 158, expansion: "SB",  quest: "The Minstrel's Ballad: Tsukuyomi's Pain", boss: "Tsukuyomi", owners: [], },
+        "Auspicious Kamuy"        : { ID: 144, expansion: "SB",  quest: "The Jade Stoa (Extreme)", boss: "Byakko", owners: [], },
+        "Euphonious Kamuy"        : { ID: 172, expansion: "SB",  quest: "Hells' Kier (Extreme)", boss: "Suzaku", owners: [], },
+        "Hallowed Kamuy"          : { ID: 182, expansion: "SB",  quest: "The Wreath of Snakes (Extreme)", boss: "Seiryu", owners: [], },
+        "Kamuy Of The Nine Tails" : { ID: 181, expansion: "SB",  quest: "A Lone Wolf No More", boss: null, owners: [], },
+
+        "Fae Gwiber"              : { ID: 189, expansion: "ShB", quest: "The Dancing Plague (Extreme)", boss: "Titania", owners: [], },
+        "Innocent Gwiber"         : { ID: 192, expansion: "ShB", quest: "The Crown of the Immaculate (Extreme)", boss: "Innocence", owners: [], },
+        "Shadow Gwiber"           : { ID: 205, expansion: "ShB", quest: "The Minstrel's Ballad: Hades's Elegy", boss: "Hades", owners: [], },
+        "Gwiber Of Light"         : { ID: 226, expansion: "ShB", quest: "The Seat of Sacrifice (Extreme)", boss: "Elidibus", owners: [], },
+        "Ruby Gwiber"             : { ID: 217, expansion: "ShB", quest: "Cinder Drift (Extreme)", boss: "The Ruby Weapon", owners: [], },
+        "Emerald Gwiber"          : { ID: 238, expansion: "ShB", quest: "Castrum Marinum (Extreme)", boss: "The Emerald Weapon", owners: [], },
+        "Diamond Gwiber"          : { ID: 249, expansion: "ShB", quest: "The Cloud Deck (Extreme)", boss: "The Diamond Weapon", owners: [], },
+        "Landerwaffe"             : { ID: 245, expansion: "ShB", quest: "The Dragon Made", boss: null, owners: [], },
+
+        "Lynx Of Eternal Darkness": { ID: 261, expansion: "EW",  quest: "The Minstrel's Ballad: Zodiark's Fall", boss: "Zodiark", owners: [], },
+        "Lynx Of Divine Light"    : { ID: 262, expansion: "EW",  quest: "The Minstrel's Ballad: Hydaelyn's Call", boss: "Hydaelyn", owners: [], },
+        "Bluefeather Lynx"        : { ID: 293, expansion: "EW",  quest: "The Minstrel's Ballad: Endsinger's Aria", boss: "The Endsinger", owners: [], },
+        "Lynx Of Imperious Wind"  : { ID: 306, expansion: "EW",  quest: "Storm's Crown (Extreme)", boss: "Barbariccia", owners: [], },
+        "Lynx Of Righteous Fire"  : { ID: 315, expansion: "EW",  quest: "Mount Ordeals (Extreme)", boss: "Rubicante", owners: [], },
+        "Lynx Of Fallen Shadow"   : { ID: 325, expansion: "EW",  quest: "The Voidcast Dais (Extreme)", boss: "Golbez", owners: [], },
+      };
+
+      var excluded_ranks = ["Silent Warriors", "Coffee Interns"];
+
+      function loadFCMembers() {
+        updateStatus("Loading FC Members ...");
+        /* Get the members. */
+        window.fetch(xivapi + "/freecompany/" + fc_id + "?data=FCM").then(
+          (response) => response.json().then(
+            (data) => {
+              var option;
+              for (entry of data.FreeCompanyMembers) {
+                // Filter out ranks: Silent Warriors, Coffee Interns
+                if (!excluded_ranks.includes(entry.Rank)) {
+                  fc_members[entry.Name] = entry.ID;
+                  option = document.createElement("option");
+                  option.textContent = option.value = entry.Name;
+                  searchselect.appendChild(option);
+                }
+              }
+              tomselect.sync();
+              var character_selection =
+                sessionStorage.getItem("character_selection");
+              if (character_selection) {
+                tomselect.setValue(JSON.parse(character_selection));
+              } else {
+                updateStatus("");
+              }
+            }
+          ),
+          (error) => {
+            updateStatus("ERROR loading FC members :(");
+          }
+        );
+      }
+
+      /* Sequential loading of mounts to avoid overloading the xivapi. */
+      var mount_queue = [];
+      var mounts_loading = false;
+
+      function loadMounts(name) {
+        mount_queue.push(name);
+        if (!mounts_loading) {
+          mountQueue();
+        }
+      }
+
+      function mountQueue() {
+        if (mount_queue.length) {
+          //console.log(`processing queue ${mount_queue} ...`); // DEBUG
+          mounts_loading = true;
+          loadMount(mount_queue.shift());
+        } else {
+          mounts_loading = false;
+          updateStatus("");
+        }
+      }
+
+      /* Load the mounts of a given character. */
+      function loadMount(name) {
+        var characterID = fc_members[name];
+        //console.log(name, "→", characterID); // DEBUG
+        updateStatus("Loading character mounts ...");
+        window.fetch( xivapi + `/character/${characterID}?data=MIMO`).then(
+          (response) => response.json().then(
+            (data) => {
+              //console.log(data); // DEBUG
+              var mount_names = Object.keys(mounts).map(x => x.toLowerCase());
+              for (var mount of data.Mounts) {
+                //console.log(mount); // DEBUG
+                if (mount_names.includes(mount.Name.toLowerCase())) {
+                  try {
+                    mounts[mount.Name].owners.push(characterID);
+                  } catch (error) {
+                    console.log("ERROR WITH:", mount.Name);
+                    throw error;
+                  }
+                }
+              }
+              updateTable(name, characterID);
+              mountQueue();
+            }
+          )
+        );
+      }
+
+      function updateStatus(text) {
+        if (text) {
+          status_text.textContent = text;
+          status_elements.style.display = "";
+          tomselect.disable();
+          hide_complete.disabled = true;
+        } else {
+          status_elements.style.display = "none";
+          tomselect.enable();
+          hide_complete.disabled = false;
+          set_hide_complete();
+        }
+      }
+
+      function updateTable(name, characterID) {
+        var th = document.createElement("th");
+        th.textContent = name;
+        mounts_table_header.appendChild(th);
+        for (var mount_name of Object.keys(mounts)) {
+          var td = document.createElement("td");
+          if (mounts[mount_name].owners.includes(characterID)) {
+            td.classList.add("yes");
+            td.textContent = yesText;
+          } else {
+            if (overrides[mount_name].includes(characterID)) {
+              td.classList.add("overridden");
+              td.textContent = overriddenText;
+            } else {
+              td.classList.add("no");
+              td.textContent = noText;
+            }
+            td.addEventListener("click", function(event) {
+              overrideMount(event);
+            });
+          }
+          mounts[mount_name].tr.appendChild(td);
+        }
+      }
+
+      /* Source: https://stackoverflow.com/a/4649936 */
+      function whichChild(elem){
+        var  i= 0;
+        while((elem=elem.previousSibling)!=null) ++i;
+        return i;
+      }
+
+      function overrideMount(event) {
+        console.log(event); // DEBUG
+        var mount_name =
+          event.target.parentElement.firstElementChild.textContent;
+        var index = whichChild(event.target);
+        var character_name = mounts_table_header.children[index].textContent;
+        var id = fc_members[character_name];
+        console.log(`overriding mount ${mount_name} for ${character_name} with`+
+          `ID ${id}`); // DEBUG
+        if (event.target.classList.contains("no")) {
+          /* Determine mount name and character ID. */
+          overrides[mount_name].push(id);
+          mounts[mount_name].owners.push(id);
+          event.target.textContent = overriddenText;
+          event.target.classList.remove("no");
+          event.target.classList.add("overridden");
+        } else {
+          var pos = mounts[mount_name].owners.indexOf(id);
+          mounts[mount_name].owners.splice(pos, 1);
+          pos = overrides[mount_name].indexOf(id);
+          overrides[mount_name].splice(pos, 1);
+          event.target.textContent = noText;
+          event.target.classList.remove("overridden");
+          event.target.classList.add("no");
+        }
+        sessionStorage.setItem("overrides", JSON.stringify(overrides));
+      }
+
+      function removeCharacter(name) {
+        var i = 0;
+        for (var th of mounts_table_header.children) {
+          if (name == th.textContent) {
+            break;
+          }
+          ++i;
+        }
+        //mounts_table_header.removeChild(mounts_table_header.childNodes[i]);
+        mounts_table_header.children[i].remove();
+        for (var tr of mounts_table_body.children) {
+          tr.children[i].remove();
+        }
+      }
+
+      function full_complete(x) { return !x.classList.contains("no"); }
+
+      function old_complete(x) { return x.classList.contains("yes"); }
+
+      function reset_complete(x) { return false; }
+
+      function set_hide_complete (event) {
+        var comp_func;
+        switch (hide_complete.value) {
+          case "0":
+            comp_func = reset_complete;
+            break;
+          case "1":
+            comp_func = old_complete;
+            break;
+          default:
+            comp_func = full_complete;
+        }
+        for (var tr of mounts_table_body.children) {
+          if (Array.from(tr.children).slice(1).every(comp_func)) {
+            tr.style.display = "none";
+          } else {
+            tr.style.display = "";
+          }
+        }
+        sessionStorage.setItem("hide_complete", hide_complete.value);
+      }
+
+      /* === MAIN =========================================================== */
+
+      /* NOTE: I'm hard-coding the ID in the hope this won't change, to make 
+       * this a little faster.
+       *
+      updateStatus("Loading FC ID ...");
+      window.fetch(xivapi + "/freecompany/search?" + 
+        "Name=Mistwalkers&Server=Bismarck&columns=Name,ID").then(
+          (response) => response.json().then(
+            (data) => {
+              for (r of data.Results) {
+                if (r.Name == "Mistwalkers") {
+                  fc_id = r.ID;
+                  loadFCMembers();
+                  break;
+                }
+              }
+            }
+          ),
+          (error) => {
+            updateStatus("Error determining ID :(");
+          }
+        );
+      */
+
+
+      var tomselect = new TomSelect("#searchselect", {
+        plugins: ["remove_button"],
+        onItemAdd: function(value, $item){
+          this.setTextboxValue("");
+          this.blur();
+          sessionStorage.setItem(
+            "character_selection", JSON.stringify(this.getValue()));
+          loadMounts(value);
+        },
+        onItemRemove: function(value){
+          sessionStorage.setItem(
+            "character_selection", JSON.stringify(this.getValue()));
+          removeCharacter(value);
+        },
+      });
+      tomselect.disable();
+      hide_complete.disabled = true;
+
+      // FIXME Change this: don't use checkbox, change text instead.
+      // Even better: use a plain select.
+      //first_th.addEventListener("click", toggle_hide_complete);
+      hide_complete.addEventListener("change", set_hide_complete);
+      hide_complete.value = sessionStorage.getItem("hide_complete") || 0;
+
+      /* Local overrides. */
+      var overrides = JSON.parse(sessionStorage.getItem("overrides")) || {};
+
+      /* Populate table, mounts, and overrides. */
+      for (var mount_name of Object.keys(mounts)) {
+        var tr = document.createElement("tr");
+        tr.classList.add(mounts[mount_name].expansion);
+        mounts_table_body.appendChild(tr);
+        var th = document.createElement("th");
+        tr.appendChild(th);
+        //th.textContent = mount_name;
+        // TODO:
+        // - Make mount_name bigger
+        // - align table cells vertically.
+        th.innerHTML = mount_name + "<div>" + mounts[mount_name].quest +
+          ((mounts[mount_name].boss) ? ("<br/><em>" + mounts[mount_name].boss + "</em>") : "")
+          + "</div>";
+        mounts[mount_name].tr = tr;
+        if (!overrides.hasOwnProperty(mount_name)) {
+          overrides[mount_name] = [];
+        }
+      }
+      fc_id = "9226468261598593545";
+      loadFCMembers();
+
+      //loadMounts(46482613);
+      //loadMounts("Lisse Ternis");
+
+    </script>
+  </body>
+</html>
