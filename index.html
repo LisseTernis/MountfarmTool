@@ -101,7 +101,6 @@
       left: 25vw;
       top: 25vh;
       margin: 0;
-      /*display: table;*/
     }
 
     #status_text_wrapper {
@@ -120,7 +119,6 @@
       vertical-align: middle;
       display: table-cell;
       padding: 10vmin;
-      /*font-size: 1rem;*/
     }
 
     .spinner {
@@ -156,7 +154,6 @@
         top: calc(50vh - 45vmin);
       }
     }
-
 
     .spinner .path {
       stroke: #302d2d;
@@ -231,14 +228,6 @@
       </div>
     </div>
     <div>
-      <!--
-      <input id="searchfield"
-             list="fc_names"
-             placeholder="Enter name to add"
-             disabled >
-      <datalist id="fc_names">
-      </datalist>
-      -->
       <select multiple
               id="searchselect"
               placeholder="Enter a name to add..."
@@ -250,10 +239,6 @@
       <thead>
         <tr id="mounts_table_header">
           <th id="first_th">
-            <!--
-            <input type="checkbox" id="hide_complete"/>
-            <label for="hide_complete">hide complete</label>
-            -->
             hide:
             <select id="hide_complete">
               <option value=0>none</option>
@@ -274,8 +259,6 @@
       const status_elements = document.getElementById("status_elements");
       const status_text = document.getElementById("status_text");
       const spinner = document.getElementById("spinner");
-      //const searchfield = document.getElementById("searchfield");
-      //const fc_names = document.getElementById("fc_names");
       const searchselect = document.getElementById("searchselect");
       const mounts_table = document.getElementById("mounts_table");
       const mounts_table_header =
@@ -285,7 +268,6 @@
       const hide_complete = document.getElementById("hide_complete");
       var fc_id = 0;
       var fc_members = {};
-      // TODO: Add trial and boss names.
       var mounts = {
         "Aithon"                  : { ID:  28, expansion: "ARR", quest: "The Bowl of Embers (Extreme)", boss:"Ifrit", owners: [], },
         "Gullfaxi"                : { ID:  30, expansion: "ARR", quest: "The Navel (Extreme)", boss: "Titan", owners: [], },
@@ -378,7 +360,6 @@
 
       function mountQueue() {
         if (mount_queue.length) {
-          //console.log(`processing queue ${mount_queue} ...`); // DEBUG
           mounts_loading = true;
           loadMount(mount_queue.shift());
         } else {
@@ -390,15 +371,12 @@
       /* Load the mounts of a given character. */
       function loadMount(name) {
         var characterID = fc_members[name];
-        //console.log(name, "→", characterID); // DEBUG
         updateStatus("Loading character mounts ...");
         window.fetch( xivapi + `/character/${characterID}?data=MIMO`).then(
           (response) => response.json().then(
             (data) => {
-              //console.log(data); // DEBUG
               var mount_names = Object.keys(mounts).map(x => x.toLowerCase());
               for (var mount of data.Mounts) {
-                //console.log(mount); // DEBUG
                 if (mount_names.includes(mount.Name.toLowerCase())) {
                   try {
                     mounts[mount.Name].owners.push(characterID);
@@ -462,14 +440,11 @@
       }
 
       function overrideMount(event) {
-        //console.log(event); // DEBUG
         var mount_name =
           event.target.parentElement.firstElementChild.childNodes[0].nodeValue;
         var index = whichChild(event.target);
         var character_name = mounts_table_header.children[index].textContent;
         var id = fc_members[character_name];
-        //console.log(`overriding mount ${mount_name} for ${character_name} with`+
-        //  ` ID ${id}`); // DEBUG
         if (event.target.classList.contains("no")) {
           /* Determine mount name and character ID. */
           overrides[mount_name].push(id);
@@ -558,7 +533,6 @@
         );
       */
 
-
       var tomselect = new TomSelect("#searchselect", {
         plugins: ["remove_button"],
         onItemAdd: function(value, $item){
@@ -577,9 +551,6 @@
       tomselect.disable();
       hide_complete.disabled = true;
 
-      // FIXME Change this: don't use checkbox, change text instead.
-      // Even better: use a plain select.
-      //first_th.addEventListener("click", toggle_hide_complete);
       hide_complete.addEventListener("change", set_hide_complete);
       hide_complete.value = sessionStorage.getItem("hide_complete") || 0;
 
@@ -593,10 +564,6 @@
         mounts_table_body.appendChild(tr);
         var th = document.createElement("th");
         tr.appendChild(th);
-        //th.textContent = mount_name;
-        // TODO:
-        // - Make mount_name bigger
-        // - align table cells vertically.
         th.innerHTML = mount_name + "<div>" + mounts[mount_name].quest +
           ((mounts[mount_name].boss) ? ("<br/><em>" + mounts[mount_name].boss + "</em>") : "")
           + "</div>";
@@ -607,9 +574,6 @@
       }
       fc_id = "9226468261598593545";
       loadFCMembers();
-
-      //loadMounts(46482613);
-      //loadMounts("Lisse Ternis");
 
     </script>
   </body>
