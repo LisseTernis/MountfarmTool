@@ -97,6 +97,9 @@
     tr.EW                  { background-color: rgb(216 165 110); }
     tr.EW:nth-child(even)  { background-color: rgb(240 166  96); }
 
+    tr.SVG                 { background-color: rgb(202 121  70); }
+    tr.SVG:nth-child(even) { background-color: rgb(240 170  92); }
+
     #status_elements {
       /*display: none;*/
       position: fixed;
@@ -365,6 +368,7 @@
               <option value="SB">SB</option>
               <option value="ShB">ShB</option>
               <option value="EW">EW</option>
+              <option value="SVG">SVG</option>
             </select>
 
           </th>
@@ -379,7 +383,7 @@
       const noText = "✗";
       const overriddenText = "🥳";
 
-      var tr_ARR, tr_HW, tr_SB, tr_ShB, tr_EW;
+      var tr_ARR, tr_HW, tr_SB, tr_ShB, tr_EW, tr_SVG;
       for (var rule of document.styleSheets[1].cssRules) {
         switch (rule.selectorText) {
           case "tr.ARR":
@@ -396,6 +400,9 @@
             break;
           case "tr.EW":
             tr_EW = rule.style;
+            break;
+          case "tr.SVG":
+            tr_SVG = rule.style;
             break;
         }
       }
@@ -473,6 +480,19 @@
         "Lynx Of Imperious Wind"  : { ID: 306, expansion: "EW",  quest: "Storm's Crown (Extreme)", boss: "Barbariccia", owners: [], },
         "Lynx Of Righteous Fire"  : { ID: 315, expansion: "EW",  quest: "Mount Ordeals (Extreme)", boss: "Rubicante", owners: [], },
         "Lynx Of Fallen Shadow"   : { ID: 325, expansion: "EW",  quest: "The Voidcast Dais (Extreme)", boss: "Golbez", owners: [], },
+
+        "Gobwalker"               : { ID:  58, expansion: "SVG", quest: "Alexander - The Burden Of The Father (Savage)", boss: "The Manipulator", owners: [], },
+        "Arrhidaeus"              : { ID: 101, expansion: "SVG", quest: "Alexander - The Soul Of The Creator (Savage)", boss: "Alexander Prime", owners: [], },
+        "Alte Roite"              : { ID: 126, expansion: "SVG", quest: "Deltascape V4.0 (Savage)", boss: "Exdeath", owners: [], },
+        "Air Force"               : { ID: 156, expansion: "SVG", quest: "Sigmascape V4.0 (Savage)", boss: "Kefka", owners: [], },
+        "Model O"                 : { ID: 173, expansion: "SVG", quest: "Alphascape V4.0 (Savage)", boss: "Omega", owners: [], },
+        "Skyslipper"              : { ID: 188, expansion: "SVG", quest: "Eden's Gate: Sepulture (Savage)", boss :"Titan", owners: [], },
+        "Ramuh"                   : { ID: 219, expansion: "SVG", quest: "Eden's Verse: Refulgence (Savage)", boss: "Shiva", owners: [], },
+        "Eden"                    : { ID: 234, expansion: "SVG", quest: "Eden's Promise: Eternity (Savage)", boss: "Oracle of Darkness", owners: [], },
+        "Demi-Phoinix"            : { ID: 265, expansion: "SVG", quest: "Asphodelos: The Fourth Circle (Savage)", boss: "Hesperos", owners: [], },
+        "Sunforged"               : { ID: 305, expansion: "SVG", quest: "Abyssos: The Eighth Circle (Savage)", boss: "Hephaistos", owners: [], },
+        "Megaloambystoma"         : { ID: 319, expansion: "SVG", quest: "Anabaseios: The Twelfth Circle (Savage)", boss: "Athena", owners: [], },
+
       };
 
       function loadFCMembers() {
@@ -678,6 +698,7 @@
         var tr_SB_display = "none";
         var tr_ShB_display = "none";
         var tr_EW_display = "none";
+        var tr_SVG_display = "none";
         switch (select_expansion.value) {
           case "ARR":
             tr_ARR_display = "";
@@ -694,18 +715,23 @@
           case "EW":
             tr_EW_display = "";
             break;
+          case "SVG":
+            tr_SVG_display = "";
+            break;
           default: /* All */
             tr_ARR_display = "";
             tr_HW_display = "";
             tr_SB_display = "";
             tr_ShB_display = "";
             tr_EW_display = "";
+            tr_SVG_display = "";
         }
         tr_ARR.setProperty("display", tr_ARR_display);
         tr_HW.setProperty("display", tr_HW_display);
         tr_SB.setProperty("display", tr_SB_display);
         tr_ShB.setProperty("display", tr_ShB_display);
         tr_EW.setProperty("display", tr_EW_display);
+        tr_SVG.setProperty("display", tr_SVG_display);
         sessionStorage.setItem("hide_expansions", select_expansion.selectedIndex);
       }
 
