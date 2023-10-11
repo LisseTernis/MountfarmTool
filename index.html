@@ -100,6 +100,9 @@
     tr.SVG                 { background-color: rgb(202 121  70); }
     tr.SVG:nth-child(even) { background-color: rgb(240 170  92); }
 
+    tr.MI                  { background-color: rgb( 56 151 252); }
+    tr.MI:nth-child(even)  { background-color: rgb(150 200 254); }
+
     #status_elements {
       /*display: none;*/
       position: fixed;
@@ -369,6 +372,7 @@
               <option value="ShB">ShB</option>
               <option value="EW">EW</option>
               <option value="SVG">SVG</option>
+              <option value="MI">MI</option>
             </select>
 
           </th>
@@ -383,7 +387,7 @@
       const noText = "✗";
       const overriddenText = "🥳";
 
-      var tr_ARR, tr_HW, tr_SB, tr_ShB, tr_EW, tr_SVG;
+      var tr_ARR, tr_HW, tr_SB, tr_ShB, tr_EW, tr_SVG, tr_MI;
       for (var rule of document.styleSheets[1].cssRules) {
         switch (rule.selectorText) {
           case "tr.ARR":
@@ -403,6 +407,9 @@
             break;
           case "tr.SVG":
             tr_SVG = rule.style;
+            break;
+          case "tr.MI":
+            tr_MI = rule.style;
             break;
         }
       }
@@ -493,6 +500,28 @@
         "Sunforged"               : { ID: 305, expansion: "SVG", quest: "Abyssos: The Eighth Circle (Savage)", boss: "Hephaistos", owners: [], },
         "Megaloambystoma"         : { ID: 319, expansion: "SVG", quest: "Anabaseios: The Twelfth Circle (Savage)", boss: "Athena", owners: [], },
 
+        "Wind-up Athena" : { ID: -487, expansion: "MI", quest: "Anabaseios: The Twelfth Circle<br/>Anabaseios: The Twelfth Circle (Savage)", boss: "Athena", owners: [], },
+        "Wind-up Halone" : { ID: -474, expansion: "MI", quest: "Euphrosyne", boss: "Menphina", owners: [], },
+        "Wind-up Erichthonios" : { ID: -466, expansion: "MI", quest: "Abyssos: The Eighth Circle<br/>Abyssos: The Eighth Circle (Savage)", boss: "Hephaistos", owners: [], },
+        "Wind-up Azeyma" : { ID: -451, expansion: "MI", quest: "Aglaia", boss: "Nald'thal", owners: [], },
+        "9S Automaton" : { ID: -419, expansion: "MI", quest: "The Tower At Paradigm's Breach", boss: "Her Inflorescence", owners: [], },
+        "Smaller Stubby" : { ID: -415, expansion: "MI", quest: "The Tower At Paradigm's Breach", boss: "Her Inflorescence", owners: [], },
+        "Wind-up Gaia" : { ID: -398, expansion: "MI", quest: "Eden's Promise: Eternity<br/>Eden's Promise: Eternity (Savage)", boss: "Eden's Promise", owners: [], },
+        "2P Automaton" : { ID: -395, expansion: "MI", quest: "The Puppets' Bunker", boss: "Compound 2P", owners: [], },
+        "2B Automaton" : { ID: -394, expansion: "MI", quest: "The Puppets' Bunker", boss: "Compound 2P", owners: [], },
+        "Wind-up Ryne" : { ID: -332, expansion: "MI", quest: "Eden's Verse: Refulgence<br/>Eden's Verse: Refulgence (Savage)", boss: "Shiva", owners: [], },
+        "Pod 316" : { ID: -365, expansion: "MI", quest: "The Copied Factory", boss: "9S-operated Walking Fortress", owners: [], },
+        "Pod 054" : { ID: -364, expansion: "MI", quest: "The Copied Factory", boss: "9S-operated Walking Fortress", owners: [], },
+        "Eden Minor" : { ID: -341, expansion: "MI", quest: "Eden's Gate: Sepulture<br/>Eden's Gate: Sepulture (Savage)", boss: "Titan", owners: [], },
+        "Wind-up Ramza" : { ID: -270, expansion: "MI", quest: "The Orbonne Monastery", boss: "Ultima", owners: [], },
+        "OMG" : { ID: -305, expansion: "MI", quest: "Alphascape V4.0<br/>Alphascape V4.0 (Savage)", boss: "Omega", owners: [], },
+        "Construct 8" : { ID: -299, expansion: "MI", quest: "The Ridorana Lighthouse", boss: "Yiazmat", owners: [], },
+        "Wind-up Scathach" : { ID: -232, expansion: "MI", quest: "Dun Scaith", boss: "Diabolos", owners: [], },
+        "Wind-up Calofisteri" : { ID: -195, expansion: "MI", quest: "The Weeping City Of Mhach", boss: "Calofisteri", owners: [], },
+        "Wind-up Echidna" : { ID: -160, expansion: "MI", quest: "The Void Ark", boss: "Echidna", owners: [], },
+        "Puff Of Darkness" : { ID: -101, expansion: "MI", quest: "The World Of Darkness", boss: "Cloud of Darkness", owners: [], },
+        "Wind-up Onion Knight" : { ID: -92, expansion: "MI", quest: "Syrcus Tower", boss: "Xande", owners: [], },
+
       };
 
       function loadFCMembers() {
@@ -562,6 +591,16 @@
                     mounts[mount.Name].owners.push(characterID);
                   } catch (error) {
                     console.log("ERROR WITH:", mount.Name);
+                    throw error;
+                  }
+                }
+              }
+              for (var minion of data.Minions) {
+                if (mount_names.includes(minion.Name.toLowerCase())) {
+                  try {
+                    mounts[minion.Name].owners.push(characterID);
+                  } catch (error) {
+                    console.log("ERROR WITH:", minion.Name);
                     throw error;
                   }
                 }
@@ -699,6 +738,7 @@
         var tr_ShB_display = "none";
         var tr_EW_display = "none";
         var tr_SVG_display = "none";
+        var tr_MI_display = "none";
         switch (select_expansion.value) {
           case "ARR":
             tr_ARR_display = "";
@@ -718,6 +758,9 @@
           case "SVG":
             tr_SVG_display = "";
             break;
+          case "MI":
+            tr_MI_display = "";
+            break;
           default: /* All */
             tr_ARR_display = "";
             tr_HW_display = "";
@@ -725,6 +768,7 @@
             tr_ShB_display = "";
             tr_EW_display = "";
             tr_SVG_display = "";
+            tr_MI_display = "";
         }
         tr_ARR.setProperty("display", tr_ARR_display);
         tr_HW.setProperty("display", tr_HW_display);
@@ -732,6 +776,7 @@
         tr_ShB.setProperty("display", tr_ShB_display);
         tr_EW.setProperty("display", tr_EW_display);
         tr_SVG.setProperty("display", tr_SVG_display);
+        tr_MI.setProperty("display", tr_MI_display);
         sessionStorage.setItem("hide_expansions", select_expansion.selectedIndex);
       }
 
