@@ -82,6 +82,9 @@
       border-right: none;
     }
 
+    tr.savage              { display: table-row; }
+    tr.minion              { display: table-row; }
+
     tr.ARR                 { background-color: rgb(170 241 255); }
     tr.ARR:nth-child(even) { background-color: rgb(157 222 230); }
 
@@ -96,12 +99,6 @@
 
     tr.EW                  { background-color: rgb(216 165 110); }
     tr.EW:nth-child(even)  { background-color: rgb(240 166  96); }
-
-    tr.SVG                 { background-color: rgb(202 121  70); }
-    tr.SVG:nth-child(even) { background-color: rgb(240 170  92); }
-
-    tr.MI                  { background-color: rgb( 56 151 252); }
-    tr.MI:nth-child(even)  { background-color: rgb(150 200 254); }
 
     #status_elements {
       /*display: none;*/
@@ -286,6 +283,23 @@
     table.settings tbody tr td[colspan="2"] {
       text-align: center;
     }
+
+    .unicode_checkbox {
+      -webkit-appearance: none;
+      filter: grayscale(100%);
+    }
+
+    .unicode_checkbox:checked {
+      filter: none;
+    }
+
+    #toggle_savage:after {
+      content: '✴️';
+    }
+
+    #toggle_minion:after {
+      content: 'Ⓜ️';
+    }
     </style>
   </head>
   <body>
@@ -359,7 +373,7 @@
         <tr id="mounts_table_header">
           <th id="first_th">
             <select id="hide_complete">
-              <option value=0>show all mounts</option>
+              <option value=0>show all</option>
               <option value=1>hide Lodestone obtained</option>
               <option value=2>hide all obtained</option>
             </select>
@@ -371,9 +385,10 @@
               <option value="SB">SB</option>
               <option value="ShB">ShB</option>
               <option value="EW">EW</option>
-              <option value="SVG">SVG</option>
-              <option value="MI">MI</option>
             </select>
+
+            <input type="checkbox" id="toggle_savage" class="unicode_checkbox"/>
+            <input type="checkbox" id="toggle_minion" class="unicode_checkbox"/>
 
           </th>
         </tr>
@@ -387,7 +402,7 @@
       const noText = "✗";
       const overriddenText = "🥳";
 
-      var tr_ARR, tr_HW, tr_SB, tr_ShB, tr_EW, tr_SVG, tr_MI;
+      var tr_ARR, tr_HW, tr_SB, tr_ShB, tr_EW, tr_savage, tr_minion;
       for (var rule of document.styleSheets[1].cssRules) {
         switch (rule.selectorText) {
           case "tr.ARR":
@@ -405,11 +420,11 @@
           case "tr.EW":
             tr_EW = rule.style;
             break;
-          case "tr.SVG":
-            tr_SVG = rule.style;
+          case "tr.savage":
+            tr_savage = rule.style;
             break;
-          case "tr.MI":
-            tr_MI = rule.style;
+          case "tr.minion":
+            tr_minion = rule.style;
             break;
         }
       }
@@ -441,86 +456,88 @@
       const first_th = document.getElementById("first_th");
       const hide_complete = document.getElementById("hide_complete");
       const select_expansion = document.getElementById("select_expansion");
+      const toggle_savage = document.getElementById("toggle_savage");
+      const toggle_minion = document.getElementById("toggle_minion");
       var fc_id = 0;
       var url = new URL(document.URL);
       var fc_members = {};
+      const savageIcon = "✴️";
+      const minionIcon = "Ⓜ️";
       var mounts = {
-        "Aithon"                  : { ID:  28, expansion: "ARR", quest: "The Bowl of Embers (Extreme)", boss:"Ifrit", owners: [], },
-        "Gullfaxi"                : { ID:  30, expansion: "ARR", quest: "The Navel (Extreme)", boss: "Titan", owners: [], },
-        "Xanthos"                 : { ID:  29, expansion: "ARR", quest: "The Howling Eye (Extreme)", boss: "Garuda", owners: [], },
-        "Enbarr"                  : { ID:  31, expansion: "ARR", quest: "The Whorleater (Extreme)", boss: "Leviathan", owners: [], },
-        "Markab"                  : { ID:  40, expansion: "ARR", quest: "The Striking Tree (Extreme)", boss: "Ramuh", owners: [], },
-        "Boreas"                  : { ID:  43, expansion: "ARR", quest: "The Akh Afah Amphitheatre (Extreme)", boss: "Shiva", owners: [], },
-        "Nightmare"               : { ID:  22, expansion: "ARR", quest: "The Howling Eye (Extreme)<br/>The Navel (Extreme)<br/>The Bowl of Embers (Extreme)", boss: "Garuda, Titan, Ifrit", owners: [], },
-        "Kirin"                   : { ID:  47, expansion: "ARR", quest: "A Legend for a Legend", boss: null, owners: [], },
+        "Aithon"                  : { ID:  28, expansion: "ARR", quest: "The Bowl of Embers (Extreme)", boss:"Ifrit", owners: [], type: "mount", },
+        "Gullfaxi"                : { ID:  30, expansion: "ARR", quest: "The Navel (Extreme)", boss: "Titan", owners: [], type: "mount", },
+        "Xanthos"                 : { ID:  29, expansion: "ARR", quest: "The Howling Eye (Extreme)", boss: "Garuda", owners: [], type: "mount", },
+        "Enbarr"                  : { ID:  31, expansion: "ARR", quest: "The Whorleater (Extreme)", boss: "Leviathan", owners: [], type: "mount", },
+        "Markab"                  : { ID:  40, expansion: "ARR", quest: "The Striking Tree (Extreme)", boss: "Ramuh", owners: [], type: "mount", },
+        "Boreas"                  : { ID:  43, expansion: "ARR", quest: "The Akh Afah Amphitheatre (Extreme)", boss: "Shiva", owners: [], type: "mount", },
+        "Nightmare"               : { ID:  22, expansion: "ARR", quest: "The Howling Eye (Extreme)<br/>The Navel (Extreme)<br/>The Bowl of Embers (Extreme)", boss: "Garuda, Titan, Ifrit", owners: [], type: "mount", },
+        "Kirin"                   : { ID:  47, expansion: "ARR", quest: "A Legend for a Legend", boss: null, owners: [], type: "mount", },
+        "Wind-up Onion Knight" : { ID: 92, expansion: "ARR", quest: "Syrcus Tower", boss: "Xande", owners: [], type: "minion", },
+        "Puff Of Darkness" : { ID: 101, expansion: "ARR", quest: "The World Of Darkness", boss: "Cloud of Darkness", owners: [], type: "minion", },
 
-        "Rose Lanner"             : { ID:  76, expansion: "HW",  quest: "Thok ast Thok (Extreme)", boss: "Ravana", owners: [], },
-        "White Lanner"            : { ID:  75, expansion: "HW",  quest: "The Limitless Blue (Extreme)", boss: "Bismarck", owners: [], },
-        "Round Lanner"            : { ID:  77, expansion: "HW",  quest: "The Minstrel's Ballad: Thordan's Reign", boss: "Thordan", owners: [], },
-        "Dark Lanner"             : { ID:  90, expansion: "HW",  quest: "The Minstrel's Ballad: Nidhogg's Rage", boss: "Nidhogg", owners: [], },
-        "Warring Lanner"          : { ID:  78, expansion: "HW",  quest: "Containment Bay S1T7 (Extreme)", boss: "Sephirot", owners: [], },
-        "Sophic Lanner"           : { ID:  98, expansion: "HW",  quest: "Containment Bay P1T6 (Extreme)", boss: "Sophia", owners: [], },
-        "Demonic Lanner"          : { ID: 104, expansion: "HW",  quest: "Containment Bay Z1T9 (Extreme)", boss: "Zurvan", owners: [], },
-        "Firebird"                : { ID: 105, expansion: "HW",  quest: "Fiery Wings, Fiery Hearts", boss: null, owners: [], },
+        "Rose Lanner"             : { ID:  76, expansion: "HW",  quest: "Thok ast Thok (Extreme)", boss: "Ravana", owners: [], type: "mount", },
+        "White Lanner"            : { ID:  75, expansion: "HW",  quest: "The Limitless Blue (Extreme)", boss: "Bismarck", owners: [], type: "mount", },
+        "Round Lanner"            : { ID:  77, expansion: "HW",  quest: "The Minstrel's Ballad: Thordan's Reign", boss: "Thordan", owners: [], type: "mount", },
+        "Dark Lanner"             : { ID:  90, expansion: "HW",  quest: "The Minstrel's Ballad: Nidhogg's Rage", boss: "Nidhogg", owners: [], type: "mount", },
+        "Warring Lanner"          : { ID:  78, expansion: "HW",  quest: "Containment Bay S1T7 (Extreme)", boss: "Sephirot", owners: [], type: "mount", },
+        "Sophic Lanner"           : { ID:  98, expansion: "HW",  quest: "Containment Bay P1T6 (Extreme)", boss: "Sophia", owners: [], type: "mount", },
+        "Demonic Lanner"          : { ID: 104, expansion: "HW",  quest: "Containment Bay Z1T9 (Extreme)", boss: "Zurvan", owners: [], type: "mount", },
+        "Firebird"                : { ID: 105, expansion: "HW",  quest: "Fiery Wings, Fiery Hearts", boss: null, owners: [], type: "mount", },
+        "Gobwalker"               : { ID:  58, expansion: "HW", quest: "Alexander - The Burden Of The Father (Savage)", boss: "The Manipulator", owners: [], type: "savage", },
+        "Arrhidaeus"              : { ID: 101, expansion: "HW", quest: "Alexander - The Soul Of The Creator (Savage)", boss: "Alexander Prime", owners: [], type: "savage", },
+        "Wind-up Echidna" : { ID: 160, expansion: "HW", quest: "The Void Ark", boss: "Echidna", owners: [], type: "minion", },
+        "Wind-up Calofisteri" : { ID: 195, expansion: "HW", quest: "The Weeping City Of Mhach", boss: "Calofisteri", owners: [], type: "minion", },
+        "Wind-up Scathach" : { ID: 232, expansion: "HW", quest: "Dun Scaith", boss: "Diabolos", owners: [], type: "minion", },
 
-        "Reveling Kamuy"          : { ID: 116, expansion: "SB",  quest: "The Pool of Tribute (Extreme)", boss: "Susano", owners: [], },
-        "Blissful Kamuy"          : { ID: 115, expansion: "SB",  quest: "Emanation (Extreme)", boss: "Lakshmi", owners: [], },
-        "Legendary Kamuy"         : { ID: 133, expansion: "SB",  quest: "The Minstrel's Ballad: Shinryu's Domain", boss: "Shinryu", owners: [], },
-        "Lunar Kamuy"             : { ID: 158, expansion: "SB",  quest: "The Minstrel's Ballad: Tsukuyomi's Pain", boss: "Tsukuyomi", owners: [], },
-        "Auspicious Kamuy"        : { ID: 144, expansion: "SB",  quest: "The Jade Stoa (Extreme)", boss: "Byakko", owners: [], },
-        "Euphonious Kamuy"        : { ID: 172, expansion: "SB",  quest: "Hells' Kier (Extreme)", boss: "Suzaku", owners: [], },
-        "Hallowed Kamuy"          : { ID: 182, expansion: "SB",  quest: "The Wreath of Snakes (Extreme)", boss: "Seiryu", owners: [], },
-        "Kamuy Of The Nine Tails" : { ID: 181, expansion: "SB",  quest: "A Lone Wolf No More", boss: null, owners: [], },
+        "Reveling Kamuy"          : { ID: 116, expansion: "SB",  quest: "The Pool of Tribute (Extreme)", boss: "Susano", owners: [], type: "mount", },
+        "Blissful Kamuy"          : { ID: 115, expansion: "SB",  quest: "Emanation (Extreme)", boss: "Lakshmi", owners: [], type: "mount", },
+        "Legendary Kamuy"         : { ID: 133, expansion: "SB",  quest: "The Minstrel's Ballad: Shinryu's Domain", boss: "Shinryu", owners: [], type: "mount", },
+        "Lunar Kamuy"             : { ID: 158, expansion: "SB",  quest: "The Minstrel's Ballad: Tsukuyomi's Pain", boss: "Tsukuyomi", owners: [], type: "mount", },
+        "Auspicious Kamuy"        : { ID: 144, expansion: "SB",  quest: "The Jade Stoa (Extreme)", boss: "Byakko", owners: [], type: "mount", },
+        "Euphonious Kamuy"        : { ID: 172, expansion: "SB",  quest: "Hells' Kier (Extreme)", boss: "Suzaku", owners: [], type: "mount", },
+        "Hallowed Kamuy"          : { ID: 182, expansion: "SB",  quest: "The Wreath of Snakes (Extreme)", boss: "Seiryu", owners: [], type: "mount", },
+        "Kamuy Of The Nine Tails" : { ID: 181, expansion: "SB",  quest: "A Lone Wolf No More", boss: null, owners: [], type: "mount", },
+        "Alte Roite"              : { ID: 126, expansion: "SB", quest: "Deltascape V4.0 (Savage)", boss: "Exdeath", owners: [], type: "savage", },
+        "Air Force"               : { ID: 156, expansion: "SB", quest: "Sigmascape V4.0 (Savage)", boss: "Kefka", owners: [], type: "savage", },
+        "Model O"                 : { ID: 173, expansion: "SB", quest: "Alphascape V4.0 (Savage)", boss: "Omega", owners: [], type: "savage", },
+        "Construct 8" : { ID: 299, expansion: "SB", quest: "The Ridorana Lighthouse", boss: "Yiazmat", owners: [], type: "minion", },
+        "OMG" : { ID: 305, expansion: "SB", quest: "Alphascape V4.0<br/>Alphascape V4.0 (Savage)", boss: "Omega", owners: [], type: "minion", },
+        "Wind-up Ramza" : { ID: 270, expansion: "SB", quest: "The Orbonne Monastery", boss: "Ultima", owners: [], type: "minion", },
 
-        "Fae Gwiber"              : { ID: 189, expansion: "ShB", quest: "The Dancing Plague (Extreme)", boss: "Titania", owners: [], },
-        "Innocent Gwiber"         : { ID: 192, expansion: "ShB", quest: "The Crown of the Immaculate (Extreme)", boss: "Innocence", owners: [], },
-        "Shadow Gwiber"           : { ID: 205, expansion: "ShB", quest: "The Minstrel's Ballad: Hades's Elegy", boss: "Hades", owners: [], },
-        "Gwiber Of Light"         : { ID: 226, expansion: "ShB", quest: "The Seat of Sacrifice (Extreme)", boss: "Elidibus", owners: [], },
-        "Ruby Gwiber"             : { ID: 217, expansion: "ShB", quest: "Cinder Drift (Extreme)", boss: "The Ruby Weapon", owners: [], },
-        "Emerald Gwiber"          : { ID: 238, expansion: "ShB", quest: "Castrum Marinum (Extreme)", boss: "The Emerald Weapon", owners: [], },
-        "Diamond Gwiber"          : { ID: 249, expansion: "ShB", quest: "The Cloud Deck (Extreme)", boss: "The Diamond Weapon", owners: [], },
-        "Landerwaffe"             : { ID: 245, expansion: "ShB", quest: "The Dragon Made", boss: null, owners: [], },
+        "Fae Gwiber"              : { ID: 189, expansion: "ShB", quest: "The Dancing Plague (Extreme)", boss: "Titania", owners: [], type: "mount", },
+        "Innocent Gwiber"         : { ID: 192, expansion: "ShB", quest: "The Crown of the Immaculate (Extreme)", boss: "Innocence", owners: [], type: "mount", },
+        "Shadow Gwiber"           : { ID: 205, expansion: "ShB", quest: "The Minstrel's Ballad: Hades's Elegy", boss: "Hades", owners: [], type: "mount", },
+        "Gwiber Of Light"         : { ID: 226, expansion: "ShB", quest: "The Seat of Sacrifice (Extreme)", boss: "Elidibus", owners: [], type: "mount", },
+        "Ruby Gwiber"             : { ID: 217, expansion: "ShB", quest: "Cinder Drift (Extreme)", boss: "The Ruby Weapon", owners: [], type: "mount", },
+        "Emerald Gwiber"          : { ID: 238, expansion: "ShB", quest: "Castrum Marinum (Extreme)", boss: "The Emerald Weapon", owners: [], type: "mount", },
+        "Diamond Gwiber"          : { ID: 249, expansion: "ShB", quest: "The Cloud Deck (Extreme)", boss: "The Diamond Weapon", owners: [], type: "mount", },
+        "Landerwaffe"             : { ID: 245, expansion: "ShB", quest: "The Dragon Made", boss: null, owners: [], type: "mount", },
+        "Skyslipper"              : { ID: 188, expansion: "ShB", quest: "Eden's Gate: Sepulture (Savage)", boss :"Titan", owners: [], type: "savage", },
+        "Ramuh"                   : { ID: 219, expansion: "ShB", quest: "Eden's Verse: Refulgence (Savage)", boss: "Shiva", owners: [], type: "savage", },
+        "Eden"                    : { ID: 234, expansion: "ShB", quest: "Eden's Promise: Eternity (Savage)", boss: "Oracle of Darkness", owners: [], type: "savage", },
+        "Eden Minor" : { ID: 341, expansion: "ShB", quest: "Eden's Gate: Sepulture<br/>Eden's Gate: Sepulture (Savage)", boss: "Titan", owners: [], type: "minion", },
+        "Pod 054" : { ID: 364, expansion: "ShB", quest: "The Copied Factory", boss: "9S-operated Walking Fortress", owners: [], type: "minion", },
+        "Pod 316" : { ID: 365, expansion: "ShB", quest: "The Copied Factory", boss: "9S-operated Walking Fortress", owners: [], type: "minion", },
+        "Wind-up Ryne" : { ID: 332, expansion: "ShB", quest: "Eden's Verse: Refulgence<br/>Eden's Verse: Refulgence (Savage)", boss: "Shiva", owners: [], type: "minion", },
+        "2B Automaton" : { ID: 394, expansion: "ShB", quest: "The Puppets' Bunker", boss: "Compound 2P", owners: [], type: "minion", },
+        "2P Automaton" : { ID: 395, expansion: "ShB", quest: "The Puppets' Bunker", boss: "Compound 2P", owners: [], type: "minion", },
+        "Wind-up Gaia" : { ID: 398, expansion: "ShB", quest: "Eden's Promise: Eternity<br/>Eden's Promise: Eternity (Savage)", boss: "Eden's Promise", owners: [], type: "minion", },
+        "Smaller Stubby" : { ID: 415, expansion: "ShB", quest: "The Tower At Paradigm's Breach", boss: "Her Inflorescence", owners: [], type: "minion", },
+        "9S Automaton" : { ID: 419, expansion: "ShB", quest: "The Tower At Paradigm's Breach", boss: "Her Inflorescence", owners: [], type: "minion", },
 
-        "Lynx Of Eternal Darkness": { ID: 261, expansion: "EW",  quest: "The Minstrel's Ballad: Zodiark's Fall", boss: "Zodiark", owners: [], },
-        "Lynx Of Divine Light"    : { ID: 262, expansion: "EW",  quest: "The Minstrel's Ballad: Hydaelyn's Call", boss: "Hydaelyn", owners: [], },
-        "Bluefeather Lynx"        : { ID: 293, expansion: "EW",  quest: "The Minstrel's Ballad: Endsinger's Aria", boss: "The Endsinger", owners: [], },
-        "Lynx Of Imperious Wind"  : { ID: 306, expansion: "EW",  quest: "Storm's Crown (Extreme)", boss: "Barbariccia", owners: [], },
-        "Lynx Of Righteous Fire"  : { ID: 315, expansion: "EW",  quest: "Mount Ordeals (Extreme)", boss: "Rubicante", owners: [], },
-        "Lynx Of Fallen Shadow"   : { ID: 325, expansion: "EW",  quest: "The Voidcast Dais (Extreme)", boss: "Golbez", owners: [], },
-
-        "Gobwalker"               : { ID:  58, expansion: "SVG", quest: "Alexander - The Burden Of The Father (Savage)", boss: "The Manipulator", owners: [], },
-        "Arrhidaeus"              : { ID: 101, expansion: "SVG", quest: "Alexander - The Soul Of The Creator (Savage)", boss: "Alexander Prime", owners: [], },
-        "Alte Roite"              : { ID: 126, expansion: "SVG", quest: "Deltascape V4.0 (Savage)", boss: "Exdeath", owners: [], },
-        "Air Force"               : { ID: 156, expansion: "SVG", quest: "Sigmascape V4.0 (Savage)", boss: "Kefka", owners: [], },
-        "Model O"                 : { ID: 173, expansion: "SVG", quest: "Alphascape V4.0 (Savage)", boss: "Omega", owners: [], },
-        "Skyslipper"              : { ID: 188, expansion: "SVG", quest: "Eden's Gate: Sepulture (Savage)", boss :"Titan", owners: [], },
-        "Ramuh"                   : { ID: 219, expansion: "SVG", quest: "Eden's Verse: Refulgence (Savage)", boss: "Shiva", owners: [], },
-        "Eden"                    : { ID: 234, expansion: "SVG", quest: "Eden's Promise: Eternity (Savage)", boss: "Oracle of Darkness", owners: [], },
-        "Demi-Phoinix"            : { ID: 265, expansion: "SVG", quest: "Asphodelos: The Fourth Circle (Savage)", boss: "Hesperos", owners: [], },
-        "Sunforged"               : { ID: 305, expansion: "SVG", quest: "Abyssos: The Eighth Circle (Savage)", boss: "Hephaistos", owners: [], },
-        "Megaloambystoma"         : { ID: 319, expansion: "SVG", quest: "Anabaseios: The Twelfth Circle (Savage)", boss: "Athena", owners: [], },
-
-        "Wind-up Athena" : { ID: -487, expansion: "MI", quest: "Anabaseios: The Twelfth Circle<br/>Anabaseios: The Twelfth Circle (Savage)", boss: "Athena", owners: [], },
-        "Wind-up Halone" : { ID: -474, expansion: "MI", quest: "Euphrosyne", boss: "Menphina", owners: [], },
-        "Wind-up Erichthonios" : { ID: -466, expansion: "MI", quest: "Abyssos: The Eighth Circle<br/>Abyssos: The Eighth Circle (Savage)", boss: "Hephaistos", owners: [], },
-        "Wind-up Azeyma" : { ID: -451, expansion: "MI", quest: "Aglaia", boss: "Nald'thal", owners: [], },
-        "9S Automaton" : { ID: -419, expansion: "MI", quest: "The Tower At Paradigm's Breach", boss: "Her Inflorescence", owners: [], },
-        "Smaller Stubby" : { ID: -415, expansion: "MI", quest: "The Tower At Paradigm's Breach", boss: "Her Inflorescence", owners: [], },
-        "Wind-up Gaia" : { ID: -398, expansion: "MI", quest: "Eden's Promise: Eternity<br/>Eden's Promise: Eternity (Savage)", boss: "Eden's Promise", owners: [], },
-        "2P Automaton" : { ID: -395, expansion: "MI", quest: "The Puppets' Bunker", boss: "Compound 2P", owners: [], },
-        "2B Automaton" : { ID: -394, expansion: "MI", quest: "The Puppets' Bunker", boss: "Compound 2P", owners: [], },
-        "Wind-up Ryne" : { ID: -332, expansion: "MI", quest: "Eden's Verse: Refulgence<br/>Eden's Verse: Refulgence (Savage)", boss: "Shiva", owners: [], },
-        "Pod 316" : { ID: -365, expansion: "MI", quest: "The Copied Factory", boss: "9S-operated Walking Fortress", owners: [], },
-        "Pod 054" : { ID: -364, expansion: "MI", quest: "The Copied Factory", boss: "9S-operated Walking Fortress", owners: [], },
-        "Eden Minor" : { ID: -341, expansion: "MI", quest: "Eden's Gate: Sepulture<br/>Eden's Gate: Sepulture (Savage)", boss: "Titan", owners: [], },
-        "Wind-up Ramza" : { ID: -270, expansion: "MI", quest: "The Orbonne Monastery", boss: "Ultima", owners: [], },
-        "OMG" : { ID: -305, expansion: "MI", quest: "Alphascape V4.0<br/>Alphascape V4.0 (Savage)", boss: "Omega", owners: [], },
-        "Construct 8" : { ID: -299, expansion: "MI", quest: "The Ridorana Lighthouse", boss: "Yiazmat", owners: [], },
-        "Wind-up Scathach" : { ID: -232, expansion: "MI", quest: "Dun Scaith", boss: "Diabolos", owners: [], },
-        "Wind-up Calofisteri" : { ID: -195, expansion: "MI", quest: "The Weeping City Of Mhach", boss: "Calofisteri", owners: [], },
-        "Wind-up Echidna" : { ID: -160, expansion: "MI", quest: "The Void Ark", boss: "Echidna", owners: [], },
-        "Puff Of Darkness" : { ID: -101, expansion: "MI", quest: "The World Of Darkness", boss: "Cloud of Darkness", owners: [], },
-        "Wind-up Onion Knight" : { ID: -92, expansion: "MI", quest: "Syrcus Tower", boss: "Xande", owners: [], },
+        "Lynx Of Eternal Darkness": { ID: 261, expansion: "EW",  quest: "The Minstrel's Ballad: Zodiark's Fall", boss: "Zodiark", owners: [], type: "mount", },
+        "Lynx Of Divine Light"    : { ID: 262, expansion: "EW",  quest: "The Minstrel's Ballad: Hydaelyn's Call", boss: "Hydaelyn", owners: [], type: "mount", },
+        "Bluefeather Lynx"        : { ID: 293, expansion: "EW",  quest: "The Minstrel's Ballad: Endsinger's Aria", boss: "The Endsinger", owners: [], type: "mount", },
+        "Lynx Of Imperious Wind"  : { ID: 306, expansion: "EW",  quest: "Storm's Crown (Extreme)", boss: "Barbariccia", owners: [], type: "mount", },
+        "Lynx Of Righteous Fire"  : { ID: 315, expansion: "EW",  quest: "Mount Ordeals (Extreme)", boss: "Rubicante", owners: [], type: "mount", },
+        "Lynx Of Fallen Shadow"   : { ID: 325, expansion: "EW",  quest: "The Voidcast Dais (Extreme)", boss: "Golbez", owners: [], type: "mount", },
+        "Demi-Phoinix"            : { ID: 265, expansion: "EW", quest: "Asphodelos: The Fourth Circle (Savage)", boss: "Hesperos", owners: [], type: "savage", },
+        "Sunforged"               : { ID: 305, expansion: "EW", quest: "Abyssos: The Eighth Circle (Savage)", boss: "Hephaistos", owners: [], type: "savage", },
+        "Megaloambystoma"         : { ID: 319, expansion: "EW", quest: "Anabaseios: The Twelfth Circle (Savage)", boss: "Athena", owners: [], type: "savage", },
+        "Wind-up Azeyma" : { ID: 451, expansion: "EW", quest: "Aglaia", boss: "Nald'thal", owners: [], type: "minion", },
+        "Wind-up Erichthonios" : { ID: 466, expansion: "EW", quest: "Abyssos: The Eighth Circle<br/>Abyssos: The Eighth Circle (Savage)", boss: "Hephaistos", owners: [], type: "minion", },
+        "Wind-up Halone" : { ID: 474, expansion: "EW", quest: "Euphrosyne", boss: "Menphina", owners: [], type: "minion", },
+        "Wind-up Athena" : { ID: 487, expansion: "EW", quest: "Anabaseios: The Twelfth Circle<br/>Anabaseios: The Twelfth Circle (Savage)", boss: "Athena", owners: [], type: "minion", },
 
       };
 
@@ -619,15 +636,21 @@
           tomselect.disable();
           hide_complete.disabled = true;
           select_expansion.disabled = true;
+          toggle_savage.disabled = true;
+          toggle_minion.disabled = true;
           button_settings.disabled = true;
         } else {
           status_elements.style.display = "none";
           tomselect.enable();
           hide_complete.disabled = false;
           select_expansion.disabled = false;
+          toggle_savage.disabled = false;
+          toggle_minion.disabled = false;
           button_settings.disabled = false;
           set_hide_complete();
           set_hide_expansions();
+          set_hide_savage();
+          set_hide_minion();
         }
       }
 
@@ -737,8 +760,6 @@
         var tr_SB_display = "none";
         var tr_ShB_display = "none";
         var tr_EW_display = "none";
-        var tr_SVG_display = "none";
-        var tr_MI_display = "none";
         switch (select_expansion.value) {
           case "ARR":
             tr_ARR_display = "";
@@ -755,29 +776,31 @@
           case "EW":
             tr_EW_display = "";
             break;
-          case "SVG":
-            tr_SVG_display = "";
-            break;
-          case "MI":
-            tr_MI_display = "";
-            break;
           default: /* All */
             tr_ARR_display = "";
             tr_HW_display = "";
             tr_SB_display = "";
             tr_ShB_display = "";
             tr_EW_display = "";
-            tr_SVG_display = "";
-            tr_MI_display = "";
         }
         tr_ARR.setProperty("display", tr_ARR_display);
         tr_HW.setProperty("display", tr_HW_display);
         tr_SB.setProperty("display", tr_SB_display);
         tr_ShB.setProperty("display", tr_ShB_display);
         tr_EW.setProperty("display", tr_EW_display);
-        tr_SVG.setProperty("display", tr_SVG_display);
-        tr_MI.setProperty("display", tr_MI_display);
         sessionStorage.setItem("hide_expansions", select_expansion.selectedIndex);
+      }
+
+      function set_hide_savage (event) {
+        tr_savage.setProperty("display",
+                (toggle_savage.checked) ? "table-row" : "none");
+        sessionStorage.setItem("show_savage", Number(toggle_savage.checked));
+      }
+
+      function set_hide_minion (event) {
+        tr_minion.setProperty("display",
+                (toggle_minion.checked) ? "table-row" : "none");
+        sessionStorage.setItem("show_minion", Number(toggle_minion.checked));
       }
 
       var server_data = {};
@@ -928,7 +951,6 @@
       /* === MAIN =========================================================== */
 
       /* TODO:
-       * - Add a dropdown menu to selectively hide/show rows based on expansion.
        */
 
       select_datacenter.addEventListener("change", datacenterSet);
@@ -972,6 +994,8 @@
       tomselect.disable();
       hide_complete.disabled = true;
       select_expansion.disabled = true;
+      toggle_savage.disabled = true;
+      toggle_minion.disabled = true;
 
       hide_complete.addEventListener("change", set_hide_complete);
       hide_complete.selectedIndex = sessionStorage.getItem("hide_complete") || 0;
@@ -980,6 +1004,11 @@
       select_expansion.selectedIndex =
         sessionStorage.getItem("hide_expansions") || 0;
 
+      toggle_savage.addEventListener("change", set_hide_savage);
+      toggle_savage.checked = Number(sessionStorage.getItem("show_savage"));
+      toggle_minion.addEventListener("change", set_hide_minion);
+      toggle_minion.checked = Number(sessionStorage.getItem("show_minion"));
+
       /* Local overrides. */
       var overrides = JSON.parse(sessionStorage.getItem("overrides")) || {};
 
@@ -987,10 +1016,13 @@
       for (var mount_name of Object.keys(mounts)) {
         var tr = document.createElement("tr");
         tr.classList.add(mounts[mount_name].expansion);
+        tr.classList.add(mounts[mount_name].type);
         mounts_table_body.appendChild(tr);
         var th = document.createElement("th");
         tr.appendChild(th);
-        th.innerHTML = mount_name + "<div>" + mounts[mount_name].quest +
+        var icon = (mounts[mount_name].type == "savage") ? savageIcon : (
+          (mounts[mount_name].type == "minion") ? minionIcon : "" );
+        th.innerHTML = icon + mount_name + "<div>" + mounts[mount_name].quest +
           ((mounts[mount_name].boss) ? ("<br/><em>" + mounts[mount_name].boss +
             "</em>") : "") + "</div>";
         mounts[mount_name].tr = tr;
