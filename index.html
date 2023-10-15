@@ -486,7 +486,9 @@
         "Gobwalker"               : { ID:  58, expansion: "HW", quest: "Alexander - The Burden Of The Father (Savage)", boss: "The Manipulator", owners: [], type: "savage", },
         "Arrhidaeus"              : { ID: 101, expansion: "HW", quest: "Alexander - The Soul Of The Creator (Savage)", boss: "Alexander Prime", owners: [], type: "savage", },
         "Wind-up Echidna" : { ID: 160, expansion: "HW", quest: "The Void Ark", boss: "Echidna", owners: [], type: "minion", },
+        "Faustlet"                : { ID: 176, expansion: "HW", quest: "Alexander - The Burden Of The Son (Savage)", boss: "Brute Justice", owners: [], type: "minion", },
         "Wind-up Calofisteri" : { ID: 195, expansion: "HW", quest: "The Weeping City Of Mhach", boss: "Calofisteri", owners: [], type: "minion", },
+        "Toy Alexander"           : { ID: 215, expansion: "HW", quest: "Alexander - The Soul Of The Creator<br/>Alexander - The Soul Of The Creator (Savage)", boss: "Alexander Prime", owners: [], type: "minion", },
         "Wind-up Scathach" : { ID: 232, expansion: "HW", quest: "Dun Scaith", boss: "Diabolos", owners: [], type: "minion", },
 
         "Reveling Kamuy"          : { ID: 116, expansion: "SB",  quest: "The Pool of Tribute (Extreme)", boss: "Susano", owners: [], type: "mount", },
@@ -500,6 +502,8 @@
         "Alte Roite"              : { ID: 126, expansion: "SB", quest: "Deltascape V4.0 (Savage)", boss: "Exdeath", owners: [], type: "savage", },
         "Air Force"               : { ID: 156, expansion: "SB", quest: "Sigmascape V4.0 (Savage)", boss: "Kefka", owners: [], type: "savage", },
         "Model O"                 : { ID: 173, expansion: "SB", quest: "Alphascape V4.0 (Savage)", boss: "Omega", owners: [], type: "savage", },
+        "Wind-up Exdeath"         : { ID: 259, expansion: "SB", quest: "Deltascape V4.0<br/>Deltascape V4.0 (Savage)", boss: "Exdeath", owners: [], type: "minion", },
+        "Wind-up Kefka"           : { ID: 281, expansion: "SB", quest: "Sigmascape V4.0<br/>Sigmascape V4.0 (Savage)", boss: "Kefka", owners: [], type: "minion", },
         "Construct 8" : { ID: 299, expansion: "SB", quest: "The Ridorana Lighthouse", boss: "Yiazmat", owners: [], type: "minion", },
         "OMG" : { ID: 305, expansion: "SB", quest: "Alphascape V4.0<br/>Alphascape V4.0 (Savage)", boss: "Omega", owners: [], type: "minion", },
         "Wind-up Ramza" : { ID: 270, expansion: "SB", quest: "The Orbonne Monastery", boss: "Ultima", owners: [], type: "minion", },
@@ -534,10 +538,11 @@
         "Demi-Phoinix"            : { ID: 265, expansion: "EW", quest: "Asphodelos: The Fourth Circle (Savage)", boss: "Hesperos", owners: [], type: "savage", },
         "Sunforged"               : { ID: 305, expansion: "EW", quest: "Abyssos: The Eighth Circle (Savage)", boss: "Hephaistos", owners: [], type: "savage", },
         "Megaloambystoma"         : { ID: 319, expansion: "EW", quest: "Anabaseios: The Twelfth Circle (Savage)", boss: "Athena", owners: [], type: "savage", },
-        "Wind-up Azeyma" : { ID: 451, expansion: "EW", quest: "Aglaia", boss: "Nald'thal", owners: [], type: "minion", },
-        "Wind-up Erichthonios" : { ID: 466, expansion: "EW", quest: "Abyssos: The Eighth Circle<br/>Abyssos: The Eighth Circle (Savage)", boss: "Hephaistos", owners: [], type: "minion", },
-        "Wind-up Halone" : { ID: 474, expansion: "EW", quest: "Euphrosyne", boss: "Menphina", owners: [], type: "minion", },
-        "Wind-up Athena" : { ID: 487, expansion: "EW", quest: "Anabaseios: The Twelfth Circle<br/>Anabaseios: The Twelfth Circle (Savage)", boss: "Athena", owners: [], type: "minion", },
+        "Wind-up Azeyma"          : { ID: 451, expansion: "EW", quest: "Aglaia", boss: "Nald'thal", owners: [], type: "minion", },
+        "Wind-up Erichthonios"    : { ID: 466, expansion: "EW", quest: "Abyssos: The Eighth Circle<br/>Abyssos: The Eighth Circle (Savage)", boss: "Hephaistos", owners: [], type: "minion", },
+        "Wind-up Halone"          : { ID: 474, expansion: "EW", quest: "Euphrosyne", boss: "Menphina", owners: [], type: "minion", },
+        "Wind-up Athena"          : { ID: 487, expansion: "EW", quest: "Anabaseios: The Twelfth Circle<br/>Anabaseios: The Twelfth Circle (Savage)", boss: "Athena", owners: [], type: "minion", },
+        "Wind-up Oschon"          : { ID: 494, expansion: "EW", quest: "Thaleia", boss: "Eulogia", owners: [], type: "minion", },
 
       };
 
@@ -1022,7 +1027,8 @@
         tr.appendChild(th);
         var icon = (mounts[mount_name].type == "savage") ? savageIcon : (
           (mounts[mount_name].type == "minion") ? minionIcon : "" );
-        th.innerHTML = icon + mount_name + "<div>" + mounts[mount_name].quest +
+        th.innerHTML = mount_name + "<span> " + icon + "</span>" + "<div>" +
+          mounts[mount_name].quest +
           ((mounts[mount_name].boss) ? ("<br/><em>" + mounts[mount_name].boss +
             "</em>") : "") + "</div>";
         mounts[mount_name].tr = tr;
