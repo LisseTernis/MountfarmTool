@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<!-- vim: set tw=0 ts=2 sw=2 sts=2: -->
+<html>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mount Farm Tool</title>
+    <link rel="shortcut icon" type="image/svg" href="logo.svg">
+    <meta name="application-name" content="Mountfarm Tool">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <link rel="manifest" href="manifest.json">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <style>
+
+    body {
+      font-family: Avenir Next, sans-serif;
+      color: #302d2d;
+      background-color: #f3f1ec;
+    }
+
+    body,
+    .ts-control,
+    .ts-control input,
+    .ts-dropdown,
+    input,
+    button,
+    select {
+      font-size: 1rem;
+    }
+
+    @media only screen
+      and (-webkit-min-device-pixel-ratio: 2)
+    {
+      body,
+      .ts-control,
+      .ts-control input,
+      .ts-dropdown,
+      input,
+      button,
+      select {
+        font-size: 1.1rem;
+      }
+
+      #settings_ui, #settings_dialog { padding: 0 }
+      #settings_dialog h1 { margin: 0 }
+    }
+
+    table {
+      border-collapse: collapse;
+      font-style: normal;
+      font-weight: normal;
+      margin: 0;
+      padding: 0;
+      caption-side: top;
+    }
+
+    strong {
+      font-weight: 600;
+    }
+
+    th {
+      font-weight: 600;
+      vertical-align: bottom;
+      padding-right: 0.5em;
+      text-align: left;
+      border-right: 0.5pt solid #302d2d;
+    }
+
+    th div {
+      font-weight: normal;
+    }
+
+    th:last-child {
+      border-right: none;
+    }
+
+    th:first-child {
+      border-right: none;
+    }
+
+    td {
+      vertical-align: middle;
+      padding-right: 0.5em;
+      border-right: 0.5pt solid #302d2d;
+      font-size: 200%;
+    }
+
+    td:last-child {
+      padding-right: 0;
+      border-right: none;
+    }
+
+    tr.savage              { display: table-row; }
+    tr.minion              { display: table-row; }
+
+    tr.ARR                 { background-color: rgb(170 241 255); }
+    tr.ARR:nth-child(even) { background-color: rgb(157 222 230); }
+
+    tr.HW                  { background-color: rgb( 52 188 213); }
+    tr.HW:nth-child(even)  { background-color: rgb( 57 173 209); }
+
+    tr.SB                  { background-color: rgb(246 198  72); }
+    tr.SB:nth-child(even)  { background-color: rgb(222 159  54); }
+
+    tr.ShB                 { background-color: rgb(124 170 225); }
+    tr.ShB:nth-child(even) { background-color: rgb(112 134 194); }
+
+    tr.EW                  { background-color: rgb(216 165 110); }
+    tr.EW:nth-child(even)  { background-color: rgb(240 166  96); }
+
+    #status_elements {
+      /*display: none;*/
+      position: fixed;
+      height: 50vh;
+      width: 50vw;
+      left: 25vw;
+      top: 25vh;
+      margin: 0;
+    }
+
+    #status_text_wrapper {
+      position: fixed;
+      height: 50vmin;
+      width: 50vmin;
+      left: calc(50vw - 25vmin);
+      top: calc(50vh - 25vmin);
+      margin: 0;
+      display: table;
+      z-index: 3;
+    }
+
+    #status_text {
+      text-align: center;
+      vertical-align: middle;
+      display: table-cell;
+      padding: 10vmin;
+    }
+
+    .spinner {
+      animation: rotate 2s linear infinite;
+      z-index: 2;
+      position: fixed;
+      height: 50vmin;
+      width: 50vmin;
+      left: calc(50vw - 25vmin);
+      top: calc(50vh - 25vmin);
+      margin: 0;
+    }
+
+    @media only screen
+      and (max-device-width: 800px)
+    {
+      #status_text_wrapper {
+        height: 90vmin;
+        width: 90vmin;
+        left: calc(50vw - 45vmin);
+        top: calc(50vh - 45vmin);
+      }
+
+      #status_text {
+        padding: 20vmin;
+      }
+
+      .spinner {
+        height: 90vmin;
+        width: 90vmin;
+        left: calc(50vw - 45vmin);
+        top: calc(50vh - 45vmin);
+      }
+    }
+
+    .spinner .path {
+      stroke: #302d2d;
+      stroke-linecap: round;
+      animation: dash 1.5s ease-in-out infinite;
+    }
+
+    @keyframes rotate {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes dash {
+      0% {
+        stroke-dasharray: 1, 150;
+        stroke-dashoffset: 0;
+      }
+      50% {
+        stroke-dasharray: 90, 150;
+        stroke-dashoffset: -35;
+      }
+      100% {
+        stroke-dasharray: 90, 150;
+        stroke-dashoffset: -124;
+      }
+    }
+
+    thead tr {
+      position: sticky;
+      top: 0;
+    }
+
+    thead tr th {
+      text-align: center;
+      background-color: #f3f1ec;
+      background-clip: padding-box;
+      padding-left: 0.5em;
+    }
+
+    tbody tr th {
+      text-align: right;
+    }
+
+    .yes {
+      color: darkblue;
+      text-align: center;
+    }
+
+    .no {
+      color: red;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .overridden {
+      color: yellowgreen;
+      text-align: center;
+      cursor: pointer;
+      text-weight: bold;
+    }
+
+    #settings_ui {
+      position: fixed;
+      height: 100vh;
+      width: 100vw;
+      left: 0;
+      top: 0;
+      margin: 0;
+      padding: 5vmin;
+      display: none; /* NOTE: use table when showing. */
+      z-index: 10;
+      background-color: rgba(243, 241, 236, 0.5);
+    }
+
+    #settings_dialog {
+      text-align: center;
+      vertical-align: middle;
+      display: table-cell;
+      padding: 10vmin;
+    }
+
+    @media only screen
+      and (-webkit-min-device-pixel-ratio: 2)
+    {
+      #settings_ui, #settings_dialog { padding: 0 }
+      #settings_dialog h1 { margin: 0 }
+    }
+
+    #select_datacenter,
+    #select_server {
+      margin-right: 2em;
+      min-width: 5em;
+    }
+
+    .ts-wrapper {
+      display: inline-block;
+      flex-grow: 2;
+    }
+
+    div.settings {
+      margin-top: 1em;
+    }
+
+    table.settings {
+      width: 100%
+    }
+
+    table.settings tbody tr td {
+      border-right: none;
+      font-size: 100%;
+      text-align: left;
+    }
+
+    table.settings tbody tr td:first-child {
+      text-align: right;
+      width: 50%;
+    }
+
+    table.settings tbody tr td[colspan="2"] {
+      text-align: center;
+    }
+
+    .unicode_checkbox {
+      -webkit-appearance: none;
+      filter: grayscale(100%);
+    }
+
+    .unicode_checkbox:checked {
+      filter: none;
+    }
+
+    #toggle_savage:after {
+      content: '✴️';
+    }
+
+    #toggle_minion:after {
+      content: 'Ⓜ️';
+    }
+    </style>
+  </head>
+  <body>
+    <div id="settings_ui">
+      <div id="settings_dialog">
+        <h1>Settings</h1>
+        <table class="settings">
+          <tbody>
+            <tr>
+              <td>DataCenter:</td>
+              <td>
+                <select id="select_datacenter"></select>
+              </td>
+            </tr>
+            <tr>
+              <td>Server:</td>
+              <td>
+                <select id="select_server"></select>
+              </td>
+            </tr>
+            <tr>
+              <td>Free Company Name:</td>
+              <td>
+                <input id="input_fcname"
+                       placeholder="Enter Free Company Name here"></input>
+              </td>
+            </tr>
+            <tr>
+              <td>Excluded Ranks:</td>
+              <td>
+                <input
+                    id="input_excluded_ranks"
+                    placeholder="Comma-speparated list of ranks"></input>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <button id="button_copy_link">🔗 Copy Link to Clipboard</button>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <button id="button_apply">Apply</button>
+                <button id="button_cancel">Cancel</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="status_elements">
+      <svg id="spinner" class="spinner" viewBox="0 0 50 50">
+        <circle class="path" cx="25" cy="25" r="20" fill="#f3f1ec"
+                stroke-width="5"></circle>
+      </svg>
+      <div id="status_text_wrapper">
+        <div id="status_text">Loading ...</div>
+      </div>
+    </div>
+    <div style="display: flex">
+      <select multiple
+              id="searchselect"
+              placeholder="Enter a name to add..."
+              autocomplete="off"
+              >
+      </select>
+      <button id="button_settings">⚙️</button>
+    </div>
+    <table id="mounts_table">
+      <thead>
+        <tr id="mounts_table_header">
+          <th id="first_th">
+            <select id="hide_complete">
+              <option value=0>show all</option>
+              <option value=1>hide Lodestone obtained</option>
+              <option value=2>hide all obtained</option>
+            </select>
+
+            <select id="select_expansion">
+              <option value="All">All</option>
+              <option value="ARR">ARR</option>
+              <option value="HW">HW</option>
+              <option value="SB">SB</option>
+              <option value="ShB">ShB</option>
+              <option value="EW">EW</option>
+            </select>
+
+            <input type="checkbox" id="toggle_savage" class="unicode_checkbox"/>
+            <input type="checkbox" id="toggle_minion" class="unicode_checkbox"/>
+
+          </th>
+        </tr>
+      </thead>
+      <tbody id="mounts_table_body">
+      </tbody>
+    </table>
+    <script src="mountfarmtool.js"></script>
+  </body>
+</html>

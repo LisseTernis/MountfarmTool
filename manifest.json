@@ -1,0 +1,10 @@
+{
+    "display": "standalone",
+    "orientation": "portrait",
+    "start_url": "/mountfarm.html",
+    "icons": [
+        {
+            "src": "logo.svg",
+            "type": "image/svg"
+        }
+}
